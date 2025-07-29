@@ -15,6 +15,8 @@ from dotenv import load_dotenv
 import os
 load_dotenv()
 
+import mongoengine
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -81,16 +83,17 @@ TEMPLATES = [
 WSGI_APPLICATION = 'ai_website_builder.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
+# MongoDB Configuration with MongoEngine
+mongoengine.connect(
+    db='ai_website_builder',
+    host=os.getenv('MONGODB_URI', default='mongodb://localhost:27017/ai_website_builder')
+)
 
+# Default database for Django's built-in apps (sessions, admin, etc.)
 DATABASES = {
     'default': {
-        'ENGINE': 'djongo',
-        'NAME': 'ai_website_builder',
-        'CLIENT': {
-            'host': os.getenv('MONGODB_URI'),
-        }
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
