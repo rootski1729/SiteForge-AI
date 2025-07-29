@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <section id="home" class="hero-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    <h1 class="display-4 fw-bold mb-4">{{ hero_title|default:"Welcome to Our Business" }}</h1>
+                    <p class="lead mb-4">{{ hero_subtitle|default:"Professional services you can trust" }}</p>
+                    <a href="#contact" class="btn btn-light btn-lg px-5">Get Started</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="about" class="section-padding">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 mx-auto text-center">
+                    <h2 class="mb-5">About Us</h2>
+                    <div class="lead">
+                        {{ about_section|linebreaks|default:"We are a professional business dedicated to providing excellent services to our clients." }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {% if services %}
+    <section id="services" class="section-padding bg-light">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 mx-auto text-center mb-5">
+                    <h2>Our Services</h2>
+                    <p class="lead">We offer a comprehensive range of professional services</p>
+                </div>
+            </div>
+            <div class="row">
+                {% for service in services %}
+                <div class="col-lg-4 col-md-6">
+                    <div class="service-card bg-white text-center">
+                        <i class="fas fa-{{ service.icon|default:'star' }} service-icon"></i>
+                        <h4>{{ service.title }}</h4>
+                        <p>{{ service.description }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <section id="contact" class="section-padding">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 mx-auto text-center mb-5">
+                    <h2>Get in Touch</h2>
+                    <p class="lead">Ready to get started? Contact us today!</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <form class="mb-4">
+                                <div class="mb-3">
+                                    <input type="text" class="form-control" placeholder="Your Name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <input type="email" class="form-control" placeholder="Your Email" required>
+                                </div>
+                                <div class="mb-3">
+                                    <input type="text" class="form-control" placeholder="Subject" required>
+                                </div>
+                                <div class="mb-3">
+                                    <textarea class="form-control" rows="5" placeholder="Your Message" required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-lg w-100">Send Message</button>
+                            </form>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="contact-info">
+                                <h4>Contact Information</h4>
+                                {% if contact_info %}
+                                    {% if contact_info.phone %}
+                                    <p><i class="fas fa-phone text-primary me-3"></i>{{ contact_info.phone }}</p>
+                                    {% endif %}
+                                    {% if contact_info.email %}
+                                    <p><i class="fas fa-envelope text-primary me-3"></i>{{ contact_info.email }}</p>
+                                    {% endif %}
+                                    {% if contact_info.address %}
+                                    <p><i class="fas fa-map-marker-alt text-primary me-3"></i>{{ contact_info.address }}</p>
+                                    {% endif %}
+                                    {% if contact_info.business_hours %}
+                                    <p><i class="fas fa-clock text-primary me-3"></i>{{ contact_info.business_hours }}</p>
+                                    {% endif %}
+                                {% else %}
+                                    <p><i class="fas fa-phone text-primary me-3"></i>(555) 123-4567</p>
+                                    <p><i class="fas fa-envelope text-primary me-3"></i>info@business.com</p>
+                                    <p><i class="fas fa-map-marker-alt text-primary me-3"></i>123 Business St, City, State</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
