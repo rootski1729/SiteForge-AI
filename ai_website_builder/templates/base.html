@@ -49,10 +49,25 @@
             color: white;
             text-decoration: none;
             transition: opacity 0.3s;
+            position: relative;
         }
         
         .nav-links a:hover {
             opacity: 0.8;
+        }
+        
+        .nav-links a.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        
+        .role-indicator {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            margin-left: 10px;
         }
         
         .btn {
@@ -157,6 +172,12 @@
             border: 1px solid #f5c6cb;
         }
         
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -240,10 +261,11 @@
         <div class="nav-container">
             <div class="logo">🤖 AI Website Builder</div>
             <div class="nav-links" id="navLinks">
-                <a href="/dashboard">Dashboard</a>
-                <a href="/my-websites">My Websites</a>
-                <a href="/create-website">Create Website</a>
-                <a href="#" id="adminLink" class="hidden">Admin</a>
+                <a href="/dashboard" id="dashboardLink">Dashboard</a>
+                <a href="/my-websites" id="websitesLink">My Websites</a>
+                <a href="/create-website" id="createLink" class="hidden">Create Website</a>
+                <a href="/admin" id="adminLink" class="hidden">Admin</a>
+                <span id="roleIndicator" class="role-indicator hidden"></span>
                 <a href="#" onclick="logout()" class="btn">Logout</a>
             </div>
         </div>
@@ -257,11 +279,52 @@
         // Global variables
         let currentUser = null;
         let authToken = localStorage.getItem('auth_token');
+        let userRole = null;
+        
+        // Role-based permissions
+        const PERMISSIONS = {
+            'admin': {
+                can_create: true,
+                can_edit: true,
+                can_delete: true,
+                can_view_all: true,
+                can_access_admin: true
+            },
+            'editor': {
+                can_create: true,
+                can_edit: true,
+                can_delete: true,
+                can_view_all: false,
+                can_access_admin: false
+            },
+            'viewer': {
+                can_create: false,
+                can_edit: false,
+                can_delete: false,
+                can_view_all: false,
+                can_access_admin: false
+            }
+        };
+        
+        function getUserPermissions() {
+            const userData = localStorage.getItem('user_data');
+            if (userData) {
+                try {
+                    const user = JSON.parse(userData);
+                    userRole = user.role;
+                    return PERMISSIONS[user.role] || PERMISSIONS['viewer'];
+                } catch (e) {
+                    console.error('Error parsing user data:', e);
+                }
+            }
+            return PERMISSIONS['viewer']; // Default to most restrictive
+        }
         
         // Check if user is logged in
         function checkAuth() {
             if (!authToken) {
-                if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+                const publicPages = ['/login', '/register', '/', '/health'];
+                if (!publicPages.includes(window.location.pathname)) {
                     window.location.href = '/login';
                 }
                 return false;
@@ -276,20 +339,72 @@
             window.location.href = '/login';
         }
         
-        // Show/hide admin link based on user role
+        // Update navigation based on user role
         function updateNavigation() {
             const userData = localStorage.getItem('user_data');
             if (userData) {
-                const user = JSON.parse(userData);
-                currentUser = user;
-                if (user.role === 'admin') {
-                    document.getElementById('adminLink').classList.remove('hidden');
-                    document.getElementById('adminLink').href = '/admin';
+                try {
+                    const user = JSON.parse(userData);
+                    currentUser = user;
+                    userRole = user.role;
+                    const permissions = getUserPermissions();
+                    
+                    // Show/hide navigation links based on permissions
+                    const createLink = document.getElementById('createLink');
+                    const adminLink = document.getElementById('adminLink');
+                    const roleIndicator = document.getElementById('roleIndicator');
+                    
+                    // Create Website link
+                    if (permissions.can_create) {
+                        createLink.classList.remove('hidden');
+                    } else {
+                        createLink.classList.add('hidden');
+                    }
+                    
+                    // Admin link
+                    if (permissions.can_access_admin) {
+                        adminLink.classList.remove('hidden');
+                    } else {
+                        adminLink.classList.add('hidden');
+                    }
+                    
+                    // Role indicator
+                    roleIndicator.textContent = `Role: ${userRole}`;
+                    roleIndicator.classList.remove('hidden');
+                    
+                } catch (e) {
+                    console.error('Error parsing user data:', e);
+                    localStorage.removeItem('user_data');
                 }
             }
         }
         
-        // API call helper
+        // Check page access permissions
+        function checkPageAccess() {
+            const permissions = getUserPermissions();
+            const currentPage = window.location.pathname;
+            
+            // Check specific page permissions
+            if (currentPage === '/create-website' && !permissions.can_create) {
+                showAlert('⛔ Access Denied: You do not have permission to create websites.', 'error');
+                setTimeout(() => {
+                    window.location.href = '/dashboard';
+                }, 3000);
+                return false;
+            }
+            
+            if (currentPage === '/admin' && !permissions.can_access_admin) {
+                showAlert('⛔ Access Denied: Admin role required.', 'error');
+                setTimeout(() => {
+                    window.location.href = '/dashboard';
+                }, 3000);
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // Enhanced API call helper with better error handling
         async function apiCall(endpoint, method = 'GET', data = null) {
             const config = {
                 method: method,
@@ -308,15 +423,53 @@
             
             try {
                 const response = await fetch(endpoint, config);
-                const result = await response.json();
+                
+                // Check if response is JSON
+                const contentType = response.headers.get('content-type');
+                let result;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    // If not JSON, get text (might be HTML error page)
+                    const text = await response.text();
+                    if (response.ok) {
+                        return { success: true, data: text };
+                    } else {
+                        throw new Error(`Server returned HTML instead of JSON. Status: ${response.status}`);
+                    }
+                }
                 
                 if (!response.ok) {
-                    throw new Error(result.error || 'Request failed');
+                    // Handle authentication errors
+                    if (response.status === 401) {
+                        localStorage.removeItem('auth_token');
+                        localStorage.removeItem('user_data');
+                        showAlert('Session expired. Please login again.', 'error');
+                        setTimeout(() => {
+                            window.location.href = '/login';
+                        }, 2000);
+                        throw new Error('Session expired. Please login again.');
+                    }
+                    
+                    // Handle permission errors
+                    if (response.status === 403) {
+                        const message = result.error || 'Access denied. Insufficient permissions.';
+                        throw new Error(`⛔ ${message}`);
+                    }
+                    
+                    throw new Error(result.error || `Request failed with status ${response.status}`);
                 }
                 
                 return result;
             } catch (error) {
                 console.error('API Error:', error);
+                
+                // Network errors
+                if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    throw new Error('Network error. Please check your connection and try again.');
+                }
+                
                 throw error;
             }
         }
@@ -329,31 +482,95 @@
             }
         }
         
-        // Show alert message
+        // Show alert message with better styling
         function showAlert(message, type = 'success') {
+            // Remove existing alerts
+            const existingAlerts = document.querySelectorAll('.alert');
+            existingAlerts.forEach(alert => alert.remove());
+            
             const alertDiv = document.createElement('div');
             alertDiv.className = `alert alert-${type}`;
-            alertDiv.textContent = message;
+            
+            // Add appropriate icon based on type
+            const icons = {
+                'success': '✅',
+                'error': '❌',
+                'warning': '⚠️',
+                'info': 'ℹ️'
+            };
+            
+            alertDiv.innerHTML = `${icons[type] || ''} ${message}`;
             
             const container = document.querySelector('.container');
             if (container) {
                 container.insertBefore(alertDiv, container.firstChild);
                 
+                // Auto-remove after 5 seconds
                 setTimeout(() => {
-                    alertDiv.remove();
+                    if (alertDiv.parentNode) {
+                        alertDiv.remove();
+                    }
                 }, 5000);
+            }
+        }
+        
+        // Enhanced error handling for AJAX requests
+        function handleApiError(error) {
+            console.error('API Error:', error);
+            
+            if (error.message.includes('Session expired')) {
+                // Already handled in apiCall
+                return;
+            } else if (error.message.includes('Network error')) {
+                showAlert('🌐 Network error. Please check your connection.', 'error');
+            } else if (error.message.includes('⛔')) {
+                // Permission errors - already formatted
+                showAlert(error.message, 'error');
+            } else if (error.message.includes('Insufficient permissions')) {
+                showAlert('⛔ You do not have permission to perform this action.', 'error');
+            } else {
+                showAlert(`❌ ${error.message || 'An unexpected error occurred.'}`, 'error');
+            }
+        }
+        
+        // Test API connection
+        async function testApiConnection() {
+            try {
+                await apiCall('/health');
+                console.log('✅ API connection successful');
+                return true;
+            } catch (error) {
+                console.error('❌ API connection failed:', error);
+                showAlert('Unable to connect to server. Please try refreshing the page.', 'error');
+                return false;
             }
         }
         
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
+            // Always update navigation first
             updateNavigation();
             
             // Check auth for protected pages
             const protectedPages = ['/dashboard', '/my-websites', '/create-website', '/admin'];
             if (protectedPages.includes(window.location.pathname)) {
-                checkAuth();
+                if (checkAuth()) {
+                    // Check specific page permissions
+                    if (checkPageAccess()) {
+                        // Test API connection on protected pages
+                        testApiConnection();
+                    }
+                }
             }
+        });
+        
+        // Handle global errors
+        window.addEventListener('error', function(e) {
+            console.error('Global error:', e.error);
+        });
+        
+        window.addEventListener('unhandledrejection', function(e) {
+            console.error('Unhandled promise rejection:', e.reason);
         });
     </script>
     {% block extra_js %}{% endblock %}

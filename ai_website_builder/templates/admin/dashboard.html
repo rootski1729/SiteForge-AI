@@ -1,155 +1,240 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - AI Website Builder</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; background: #f5f5f5; }
-        .dashboard { display: grid; grid-template-columns: 250px 1fr; min-height: 100vh; }
-        .sidebar { background: #2c3e50; color: white; padding: 20px; }
-        .sidebar h2 { margin-bottom: 30px; }
-        .sidebar ul { list-style: none; }
-        .sidebar li { margin-bottom: 10px; }
-        .sidebar a { color: white; text-decoration: none; padding: 10px; display: block; border-radius: 5px; }
-        .sidebar a:hover { background: #34495e; }
-        .main-content { padding: 30px; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .stat-card h3 { color: #2c3e50; margin-bottom: 10px; }
-        .stat-number { font-size: 2em; font-weight: bold; color: #3498db; }
-        .data-table { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .table-header { background: #3498db; color: white; padding: 20px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
-        .btn { background: #3498db; color: white; padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer; }
-        .btn:hover { background: #2980b9; }
-        .btn-danger { background: #e74c3c; }
-        .btn-danger:hover { background: #c0392b; }
-    </style>
-</head>
-<body>
-    <div class="dashboard">
-        <div class="sidebar">
-            <h2>Admin Panel</h2>
-            <ul>
-                <li><a href="#dashboard">Dashboard</a></li>
-                <li><a href="#users">Manage Users</a></li>
-                <li><a href="#roles">Manage Roles</a></li>
-                <li><a href="#websites">All Websites</a></li>
-                <li><a href="#" onclick="logout()">Logout</a></li>
-            </ul>
-        </div>
+{% extends "base.html" %}
+
+{% block title %}Dashboard - AI Website Builder{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <h1>Welcome to AI Website Builder! 🚀</h1>
+        <p style="font-size: 1.1em; color: #666; margin-bottom: 30px;">
+            Create stunning websites powered by AI in just a few clicks.
+        </p>
         
-        <div class="main-content">
-            <h1>Dashboard Overview</h1>
-            
-            <div class="stats-grid" id="stats-container">
-                <!-- Stats will be loaded here -->
-            </div>
-            
-            <div class="data-table">
-                <div class="table-header">
-                    <h3>Recent Users</h3>
-                </div>
-                <table id="users-table">
-                    <thead>
-                        <tr>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th>Status</th>
-                            <th>Created</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Users will be loaded here -->
-                    </tbody>
-                </table>
+        <!-- Role-based dashboard cards -->
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));" id="dashboardCards">
+            <!-- Cards will be loaded based on user role -->
+        </div>
+    </div>
+    
+    <div class="card">
+        <h2>Recent Websites</h2>
+        <div id="recentWebsites">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Loading your websites...</p>
             </div>
         </div>
     </div>
+</div>
+{% endblock %}
 
-    <script>
-        // Load dashboard data
-        async function loadDashboard() {
-            const token = localStorage.getItem('admin_token');
-            if (!token) {
-                window.location.href = '/admin/login';
-                return;
-            }
-
+{% block extra_js %}
+<script>
+    let currentUserRole = null;
+    
+    // Role-based permissions
+    const PERMISSIONS = {
+        'admin': {
+            can_create: true,
+            can_edit: true,
+            can_delete: true,
+            can_view_all: true,
+            can_manage_users: true,
+            can_access_admin: true
+        },
+        'editor': {
+            can_create: true,
+            can_edit: true,
+            can_delete: true,
+            can_view_all: false,
+            can_manage_users: false,
+            can_access_admin: false
+        },
+        'viewer': {
+            can_create: false,
+            can_edit: false,
+            can_delete: false,
+            can_view_all: false,
+            can_manage_users: false,
+            can_access_admin: false
+        }
+    };
+    
+    function getUserPermissions() {
+        const userData = localStorage.getItem('user_data');
+        if (userData) {
             try {
-                // Load statistics
-                const statsResponse = await fetch('/api/admin/dashboard', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const statsData = await statsResponse.json();
-                
-                if (statsData.statistics) {
-                    displayStats(statsData.statistics);
-                }
-
-                // Load users
-                const usersResponse = await fetch('/api/admin/users', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const usersData = await usersResponse.json();
-                
-                if (usersData.users) {
-                    displayUsers(usersData.users);
-                }
-            } catch (error) {
-                console.error('Error loading dashboard:', error);
+                const user = JSON.parse(userData);
+                currentUserRole = user.role;
+                return PERMISSIONS[user.role] || PERMISSIONS['viewer'];
+            } catch (e) {
+                console.error('Error parsing user data:', e);
             }
         }
-
-        function displayStats(stats) {
-            const container = document.getElementById('stats-container');
-            container.innerHTML = `
-                <div class="stat-card">
-                    <h3>Total Users</h3>
-                    <div class="stat-number">${stats.total_users}</div>
+        return PERMISSIONS['viewer']; // Default to most restrictive
+    }
+    
+    function loadDashboardCards() {
+        const permissions = getUserPermissions();
+        const cardsContainer = document.getElementById('dashboardCards');
+        
+        let cards = [];
+        
+        // Create Website Card (Only for admin and editor)
+        if (permissions.can_create) {
+            cards.push(`
+                <div class="website-card" style="text-align: center;">
+                    <h3>🤖 Create New Website</h3>
+                    <p>Use AI to generate a professional website for your business</p>
+                    <a href="/create-website" class="btn btn-primary" style="margin-top: 15px;">
+                        Start Creating
+                    </a>
                 </div>
-                <div class="stat-card">
-                    <h3>Total Websites</h3>
-                    <div class="stat-number">${stats.total_websites}</div>
+            `);
+        }
+        
+        // My Websites Card (For all users - but functionality differs)
+        cards.push(`
+            <div class="website-card" style="text-align: center;">
+                <h3>📱 My Websites</h3>
+                <p>${permissions.can_edit ? 'View and manage all your created websites' : 'View your websites'}</p>
+                <a href="/my-websites" class="btn btn-primary" style="margin-top: 15px;">
+                    View Websites
+                </a>
+            </div>
+        `);
+        
+        // Admin Panel Card (Only for admin)
+        if (permissions.can_access_admin) {
+            cards.push(`
+                <div class="website-card" style="text-align: center;">
+                    <h3>⚙️ Admin Panel</h3>
+                    <p>Manage users, roles, and system settings</p>
+                    <a href="/admin" class="btn btn-danger" style="margin-top: 15px;">
+                        Admin Panel
+                    </a>
                 </div>
-                <div class="stat-card">
-                    <h3>Published Websites</h3>
-                    <div class="stat-number">${stats.published_websites}</div>
+            `);
+        }
+        
+        // Role-specific info card
+        cards.push(`
+            <div class="website-card" style="text-align: center; background: #f8f9fa; border: 2px solid #e9ecef;">
+                <h3>👤 Your Role: ${currentUserRole || 'Guest'}</h3>
+                <div style="text-align: left; margin-top: 15px;">
+                    <p><strong>Permissions:</strong></p>
+                    <ul style="margin-left: 20px; color: #666;">
+                        <li>${permissions.can_create ? '✅' : '❌'} Create websites</li>
+                        <li>${permissions.can_edit ? '✅' : '❌'} Edit websites</li>
+                        <li>${permissions.can_delete ? '✅' : '❌'} Delete websites</li>
+                        <li>${permissions.can_access_admin ? '✅' : '❌'} Admin access</li>
+                    </ul>
                 </div>
-                <div class="stat-card">
-                    <h3>Total Roles</h3>
-                    <div class="stat-number">${stats.total_roles}</div>
+            </div>
+        `);
+        
+        cardsContainer.innerHTML = cards.join('');
+    }
+    
+    async function loadRecentWebsites() {
+        const permissions = getUserPermissions();
+        
+        try {
+            const result = await apiCall('/api/websites');
+            const websitesContainer = document.getElementById('recentWebsites');
+            
+            if (result.websites && result.websites.length > 0) {
+                const recentWebsites = result.websites.slice(0, 3); // Show only first 3
+                
+                websitesContainer.innerHTML = recentWebsites.map(website => `
+                    <div class="website-card">
+                        <h3>${website.title}</h3>
+                        <div class="website-meta">
+                            <p><strong>Type:</strong> ${website.business_type || 'General'}</p>
+                            <p><strong>Industry:</strong> ${website.industry || 'N/A'}</p>
+                            <p><strong>Status:</strong> ${website.is_published ? '🟢 Published' : '🟡 Draft'}</p>
+                            <p><strong>Created:</strong> ${new Date(website.created_at).toLocaleDateString()}</p>
+                        </div>
+                        <div class="website-actions">
+                            ${website.is_published ? 
+                                `<a href="/api/preview/${website._id}" target="_blank" class="btn btn-success">View Site</a>` : 
+                                '<span class="btn" style="opacity: 0.5;">Not Published</span>'
+                            }
+                            ${permissions.can_edit ? 
+                                '<a href="/my-websites" class="btn btn-primary">Manage</a>' :
+                                '<a href="/my-websites" class="btn btn-primary">View Details</a>'
+                            }
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                if (permissions.can_create) {
+                    websitesContainer.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #666;">
+                            <h3>No websites yet</h3>
+                            <p>Create your first AI-powered website!</p>
+                            <a href="/create-website" class="btn btn-primary" style="margin-top: 15px;">
+                                Create First Website
+                            </a>
+                        </div>
+                    `;
+                } else {
+                    websitesContainer.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #666;">
+                            <h3>No websites yet</h3>
+                            <p>You don't have permission to create websites. Contact your administrator if you need access.</p>
+                        </div>
+                    `;
+                }
+            }
+        } catch (error) {
+            document.getElementById('recentWebsites').innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #e74c3c;">
+                    <p>Error loading websites: ${error.message}</p>
                 </div>
             `;
         }
-
-        function displayUsers(users) {
-            const tbody = document.querySelector('#users-table tbody');
-            tbody.innerHTML = users.map(user => `
-                <tr>
-                    <td>${user.email}</td>
-                    <td>${user.role}</td>
-                    <td>${user.is_active ? 'Active' : 'Inactive'}</td>
-                    <td>${new Date(user.created_at).toLocaleDateString()}</td>
-                    <td>
-                        <button class="btn" onclick="editUser('${user._id}')">Edit</button>
-                        <button class="btn btn-danger" onclick="deleteUser('${user._id}')">Delete</button>
-                    </td>
-                </tr>
-            `).join('');
+    }
+    
+    // Redirect based on permissions
+    function checkPageAccess() {
+        const permissions = getUserPermissions();
+        const currentPage = window.location.pathname;
+        
+        // Check if user is trying to access restricted pages
+        if (currentPage === '/create-website' && !permissions.can_create) {
+            showAlert('You do not have permission to create websites.', 'error');
+            setTimeout(() => {
+                window.location.href = '/dashboard';
+            }, 2000);
+            return;
         }
-
-        function logout() {
-            localStorage.removeItem('admin_token');
-            window.location.href = '/';
+        
+        if (currentPage === '/admin' && !permissions.can_access_admin) {
+            showAlert('You do not have permission to access the admin panel.', 'error');
+            setTimeout(() => {
+                window.location.href = '/dashboard';
+            }, 2000);
+            return;
         }
-
-        // Load dashboard on page load
-        document.addEventListener('DOMContentLoaded', loadDashboard);
-    </script>
-</body>
-</html>
+    }
+    
+    // Initialize dashboard
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check authentication
+        if (!checkAuth()) {
+            return;
+        }
+        
+        // Check page access permissions
+        checkPageAccess();
+        
+        // Load role-based dashboard
+        loadDashboardCards();
+        loadRecentWebsites();
+        
+        // Also update navigation based on role
+        updateNavigation();
+    });
+</script>
+{% endblock %}

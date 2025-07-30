@@ -7,6 +7,20 @@ from app.models.role import Role
 from app.models.website import Website
 from bson.objectid import ObjectId
 
+def serialize_object_id(obj):
+    """Convert ObjectId to string in MongoDB documents"""
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            if isinstance(value, ObjectId):
+                obj[key] = str(value)
+            elif isinstance(value, dict):
+                serialize_object_id(value)
+            elif isinstance(value, list):
+                for item in value:
+                    if isinstance(item, dict):
+                        serialize_object_id(item)
+    return obj
+
 # User Management Routes
 @api_bp.route('/admin/users', methods=['GET'])
 @require_auth
@@ -15,12 +29,16 @@ def get_all_users():
     try:
         users = User.get_all_users()
         
-        # Get role information for each user
+        # Serialize ObjectIds and get role information for each user
         for user in users:
-            user['_id'] = str(user['_id'])
+            user = serialize_object_id(user)
             if user.get('role_id'):
                 role_data = Role.find_by_id(user['role_id'])
-                user['role'] = role_data['name'] if role_data else 'unknown'
+                if role_data:
+                    role_data = serialize_object_id(role_data)
+                    user['role'] = role_data['name']
+                else:
+                    user['role'] = 'unknown'
             else:
                 user['role'] = 'no_role'
             # Remove password hash from response
@@ -29,6 +47,7 @@ def get_all_users():
         return jsonify({'users': users}), 200
         
     except Exception as e:
+        print(f"Error in get_all_users: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @api_bp.route('/admin/users/<user_id>/role', methods=['PUT'])
@@ -58,6 +77,7 @@ def update_user_role(user_id):
         return jsonify({'message': 'User role updated successfully'}), 200
         
     except Exception as e:
+        print(f"Error in update_user_role: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @api_bp.route('/admin/users/<user_id>', methods=['DELETE'])
@@ -66,7 +86,8 @@ def update_user_role(user_id):
 def delete_user(user_id):
     try:
         # Prevent admin from deleting themselves
-        if str(request.current_user['_id']) == user_id:
+        current_user_id = str(request.current_user['_id'])
+        if current_user_id == user_id:
             return jsonify({'error': 'Cannot delete your own account'}), 400
         
         user_data = User.find_by_id(user_id)
@@ -77,6 +98,7 @@ def delete_user(user_id):
         return jsonify({'message': 'User deleted successfully'}), 200
         
     except Exception as e:
+        print(f"Error in delete_user: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 # Role Management Routes
@@ -87,12 +109,14 @@ def get_all_roles():
     try:
         roles = Role.get_all_roles()
         
+        # Serialize ObjectIds
         for role in roles:
-            role['_id'] = str(role['_id'])
+            role = serialize_object_id(role)
         
         return jsonify({'roles': roles}), 200
         
     except Exception as e:
+        print(f"Error in get_all_roles: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @api_bp.route('/admin/roles', methods=['POST'])
@@ -120,6 +144,7 @@ def create_role():
         }), 201
         
     except Exception as e:
+        print(f"Error in create_role: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @api_bp.route('/admin/roles/<role_id>', methods=['PUT'])
@@ -150,6 +175,7 @@ def update_role(role_id):
             return jsonify({'error': 'No valid fields to update'}), 400
         
     except Exception as e:
+        print(f"Error in update_role: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @api_bp.route('/admin/roles/<role_id>', methods=['DELETE'])
@@ -169,6 +195,7 @@ def delete_role(role_id):
         return jsonify({'message': 'Role deleted successfully'}), 200
         
     except Exception as e:
+        print(f"Error in delete_role: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 # Dashboard Statistics
@@ -193,4 +220,5 @@ def admin_dashboard():
         }), 200
         
     except Exception as e:
+        print(f"Error in admin_dashboard: {str(e)}")
         return jsonify({'error': str(e)}), 500

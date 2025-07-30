@@ -10,7 +10,7 @@
             Tell us about your business and our AI will create a professional website for you!
         </p>
         
-        <form id="createWebsiteForm">
+        <form id="websiteForm">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
                 <div>
                     <div class="form-group">
@@ -110,7 +110,7 @@
 
 {% block extra_js %}
 <script>
-    document.getElementById('createWebsiteForm').addEventListener('submit', async (e) => {
+    document.getElementById('websiteForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         
         const formData = new FormData(e.target);
@@ -122,25 +122,51 @@
             template_id: formData.get('template')
         };
         
+        // Validate required fields
+        if (!data.company_name || !data.business_type || !data.industry) {
+            alert('Please fill in all required fields.');
+            return;
+        }
+        
+        console.log('Creating website with data:', data);
+        
         // Show progress
-        document.getElementById('createWebsiteForm').classList.add('hidden');
+        document.querySelector('.card').style.display = 'none';
         document.getElementById('generationProgress').classList.remove('hidden');
         
         try {
-            const result = await apiCall('/api/generate-website', 'POST', data);
+            const authToken = localStorage.getItem('auth_token');
             
-            showAlert('Website generated successfully! 🎉', 'success');
+            const response = await fetch('/api/generate-website', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${authToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
             
-            setTimeout(() => {
-                window.location.href = `/my-websites`;
-            }, 2000);
+            if (response.ok) {
+                const result = await response.json();
+                console.log('Website created:', result);
+                
+                alert('🎉 Website generated successfully!');
+                
+                // Redirect to my websites
+                window.location.href = '/my-websites';
+            } else {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to create website');
+            }
             
         } catch (error) {
-            // Hide progress and show form again
-            document.getElementById('generationProgress').classList.add('hidden');
-            document.getElementById('createWebsiteForm').classList.remove('hidden');
+            console.error('Error creating website:', error);
             
-            showAlert(error.message, 'error');
+            // Show form again
+            document.getElementById('generationProgress').classList.add('hidden');
+            document.querySelector('.card').style.display = 'block';
+            
+            alert('Error creating website: ' + error.message);
         }
     });
 </script>

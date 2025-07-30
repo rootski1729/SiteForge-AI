@@ -1,48 +1,179 @@
 {% extends "base.html" %}
 
-{% block title %}My Websites - AI Website Builder{% endblock %}
+{% block title %}Admin Dashboard - AI Website Builder{% endblock %}
 
 {% block content %}
 <div class="container">
+    <!-- Admin Header -->
     <div class="card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-            <h1>My Websites </h1>
-            <a href="/create-website" class="btn btn-success">
-                Create New Website
-            </a>
+            <div>
+                <h1>⚙️ Admin Dashboard</h1>
+                <p style="color: #666; margin: 0;">Manage users, roles, and system settings</p>
+            </div>
+            <div>
+                <span class="badge" style="background: #e74c3c; color: white; padding: 5px 15px; border-radius: 20px;">
+                    Administrator Access
+                </span>
+            </div>
         </div>
-        
-        <div id="websitesContainer">
-            <div class="loading">
-                <div class="spinner"></div>
-                <p>Loading your websites...</p>
+
+        <!-- Admin Navigation Tabs -->
+        <div class="admin-nav" style="border-bottom: 2px solid #e9ecef; margin-bottom: 30px;">
+            <button class="nav-tab active" data-tab="dashboard" onclick="switchTab('dashboard')">
+                📊 Dashboard
+            </button>
+            <button class="nav-tab" data-tab="users" onclick="switchTab('users')">
+                👥 Users
+            </button>
+            <button class="nav-tab" data-tab="roles" onclick="switchTab('roles')">
+                👑 Roles
+            </button>
+            <button class="nav-tab" data-tab="websites" onclick="switchTab('websites')">
+                🌐 All Websites
+            </button>
+            <button class="nav-tab" data-tab="settings" onclick="switchTab('settings')">
+                ⚙️ Settings
+            </button>
+        </div>
+    </div>
+
+    <!-- Dashboard Tab -->
+    <div id="dashboard-tab" class="tab-content active">
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px;">
+            <div class="stat-card">
+                <h3>📊 Total Users</h3>
+                <div class="stat-number" id="totalUsers">-</div>
+                <p>Registered users</p>
+            </div>
+            <div class="stat-card">
+                <h3>🌐 Total Websites</h3>
+                <div class="stat-number" id="totalWebsites">-</div>
+                <p>Created websites</p>
+            </div>
+            <div class="stat-card">
+                <h3>✅ Published Sites</h3>
+                <div class="stat-number" id="publishedWebsites">-</div>
+                <p>Live websites</p>
+            </div>
+            <div class="stat-card">
+                <h3>👑 Total Roles</h3>
+                <div class="stat-number" id="totalRoles">-</div>
+                <p>System roles</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>📈 Recent Activity</h3>
+            <div id="recentActivity">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading recent activity...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Tab -->
+    <div id="users-tab" class="tab-content">
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3>👥 User Management</h3>
+                <button class="btn btn-success" onclick="refreshUsers()">
+                    🔄 Refresh Users
+                </button>
+            </div>
+            <div id="usersContainer">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading users...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Roles Tab -->
+    <div id="roles-tab" class="tab-content">
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3>👑 Role Management</h3>
+                <button class="btn btn-success" onclick="showCreateRoleModal()">
+                    ➕ Create Role
+                </button>
+            </div>
+            <div id="rolesContainer">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading roles...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Websites Tab -->
+    <div id="websites-tab" class="tab-content">
+        <div class="card">
+            <h3>🌐 All Websites</h3>
+            <div id="allWebsitesContainer">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading all websites...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Tab -->
+    <div id="settings-tab" class="tab-content">
+        <div class="card">
+            <h3>⚙️ System Settings</h3>
+            <div class="settings-grid">
+                <div class="setting-item">
+                    <h4>🔐 Security Settings</h4>
+                    <p>Manage authentication and security policies</p>
+                    <button class="btn btn-primary">Configure</button>
+                </div>
+                <div class="setting-item">
+                    <h4>🤖 AI Settings</h4>
+                    <p>Configure AI generation settings and API keys</p>
+                    <button class="btn btn-primary">Configure</button>
+                </div>
+                <div class="setting-item">
+                    <h4>📧 Email Settings</h4>
+                    <p>Configure email notifications and SMTP</p>
+                    <button class="btn btn-primary">Configure</button>
+                </div>
+                <div class="setting-item">
+                    <h4>🗄️ Database Settings</h4>
+                    <p>Database backup and maintenance</p>
+                    <button class="btn btn-primary">Configure</button>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Edit Website Modal -->
-<div id="editModal" class="modal hidden">
+<!-- User Edit Modal -->
+<div id="userEditModal" class="modal hidden">
     <div class="modal-content">
-        <h2>Edit Website</h2>
-        <form id="editWebsiteForm">
-            <input type="hidden" id="editWebsiteId">
+        <h2>Edit User</h2>
+        <form id="editUserForm">
+            <input type="hidden" id="editUserId">
             
             <div class="form-group">
-                <label for="editTitle">Website Title</label>
-                <input type="text" id="editTitle" name="title" required>
+                <label for="editUserEmail">Email</label>
+                <input type="email" id="editUserEmail" disabled>
             </div>
             
             <div class="form-group">
-                <label for="editPublished">Status</label>
-                <select id="editPublished" name="is_published">
-                    <option value="false">Draft (Not visible to public)</option>
-                    <option value="true">Published (Live website)</option>
+                <label for="editUserRole">Role</label>
+                <select id="editUserRole" name="role_id" required>
+                    <!-- Options will be loaded dynamically -->
                 </select>
             </div>
             
             <div style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 30px;">
-                <button type="button" onclick="closeEditModal()" class="btn">Cancel</button>
+                <button type="button" onclick="closeUserEditModal()" class="btn">Cancel</button>
                 <button type="submit" class="btn btn-success">Save Changes</button>
             </div>
         </form>
@@ -52,108 +183,343 @@
 
 {% block extra_css %}
 <style>
-.modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
+.admin-nav {
     display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
+    gap: 5px;
 }
 
-.modal-content {
+.nav-tab {
+    padding: 12px 20px;
+    border: none;
+    background: none;
+    color: #666;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s;
+}
+
+.nav-tab:hover {
+    background: #f8f9fa;
+    color: #333;
+}
+
+.nav-tab.active {
+    color: #3498db;
+    border-bottom-color: #3498db;
+    background: #f8f9fa;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.stat-card {
     background: white;
-    padding: 30px;
+    padding: 25px;
     border-radius: 15px;
-    max-width: 500px;
-    width: 90%;
-    max-height: 80vh;
-    overflow-y: auto;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    text-align: center;
+    transition: transform 0.3s;
 }
 
-.status-badge {
-    padding: 5px 12px;
-    border-radius: 15px;
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-card h3 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-size: 1.1em;
+}
+
+.stat-number {
+    font-size: 2.5em;
+    font-weight: bold;
+    color: #3498db;
+    margin-bottom: 10px;
+}
+
+.stat-card p {
+    color: #666;
+    margin: 0;
+}
+
+.users-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.users-table th,
+.users-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.users-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.users-table tr:hover {
+    background: #f8f9fa;
+}
+
+.role-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
     font-size: 0.8em;
     font-weight: bold;
 }
 
-.status-published {
-    background: #d4edda;
-    color: #155724;
+.role-admin {
+    background: #ffebee;
+    color: #c62828;
 }
 
-.status-draft {
-    background: #fff3cd;
-    color: #856404;
+.role-editor {
+    background: #e8f5e8;
+    color: #2e7d32;
+}
+
+.role-viewer {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.setting-item {
+    padding: 20px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.setting-item h4 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.setting-item p {
+    color: #666;
+    margin-bottom: 15px;
+}
+
+.badge {
+    display: inline-block;
+    font-size: 0.8em;
+    font-weight: bold;
 }
 </style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    let websites = [];
+    let currentTab = 'dashboard';
+    let allUsers = [];
+    let allRoles = [];
     
-    async function loadWebsites() {
+    // Check admin permissions
+    function checkAdminAccess() {
+        const userData = localStorage.getItem('user_data');
+        if (userData) {
+            try {
+                const user = JSON.parse(userData);
+                if (user.role !== 'admin') {
+                    showAlert('Access denied. Admin role required.', 'error');
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 2000);
+                    return false;
+                }
+                return true;
+            } catch (e) {
+                console.error('Error parsing user data:', e);
+            }
+        }
+        
+        showAlert('Authentication required.', 'error');
+        setTimeout(() => {
+            window.location.href = '/login';
+        }, 2000);
+        return false;
+    }
+    
+    // Tab switching
+    function switchTab(tabName) {
+        // Hide all tab contents
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        
+        // Remove active class from all nav tabs
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        
+        // Show selected tab content
+        document.getElementById(tabName + '-tab').classList.add('active');
+        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+        
+        currentTab = tabName;
+        
+        // Load tab-specific data
+        loadTabData(tabName);
+    }
+    
+    // Load data for specific tab
+    async function loadTabData(tabName) {
+        switch(tabName) {
+            case 'dashboard':
+                await loadDashboardStats();
+                break;
+            case 'users':
+                await loadUsers();
+                break;
+            case 'roles':
+                await loadRoles();
+                break;
+            case 'websites':
+                await loadAllWebsites();
+                break;
+            case 'settings':
+                // Settings loaded in template
+                break;
+        }
+    }
+    
+    // Load dashboard statistics
+    async function loadDashboardStats() {
         try {
-            const result = await apiCall('/api/websites');
-            websites = result.websites || [];
-            displayWebsites();
+            const result = await apiCall('/api/admin/dashboard');
+            const stats = result.statistics;
+            
+            document.getElementById('totalUsers').textContent = stats.total_users;
+            document.getElementById('totalWebsites').textContent = stats.total_websites;
+            document.getElementById('publishedWebsites').textContent = stats.published_websites;
+            document.getElementById('totalRoles').textContent = stats.total_roles;
+            
+            // Load recent activity (simplified)
+            document.getElementById('recentActivity').innerHTML = `
+                <div style="padding: 20px; text-align: center; color: #666;">
+                    <p>📈 System Status: Operational</p>
+                    <p>🕒 Last updated: ${new Date().toLocaleString()}</p>
+                </div>
+            `;
+            
         } catch (error) {
-            document.getElementById('websitesContainer').innerHTML = `
+            handleApiError(error);
+        }
+    }
+    
+    // Load users
+    async function loadUsers() {
+        try {
+            const result = await apiCall('/api/admin/users');
+            allUsers = result.users;
+            displayUsers();
+        } catch (error) {
+            handleApiError(error);
+            document.getElementById('usersContainer').innerHTML = `
                 <div style="text-align: center; padding: 40px; color: #e74c3c;">
-                    <p>Error loading websites: ${error.message}</p>
+                    <p>Error loading users: ${error.message}</p>
                 </div>
             `;
         }
     }
     
-    function displayWebsites() {
-        const container = document.getElementById('websitesContainer');
+    // Display users in table
+    function displayUsers() {
+        const container = document.getElementById('usersContainer');
         
-        if (websites.length === 0) {
-            container.innerHTML = `
-                <div style="text-align: center; padding: 60px; color: #666;">
-                    <h3>No websites yet</h3>
-                    <p>Create your first AI-powered website to get started!</p>
-                    <a href="/create-website" class="btn btn-primary" style="margin-top: 20px;">
-                        🚀 Create First Website
-                    </a>
-                </div>
-            `;
+        if (allUsers.length === 0) {
+            container.innerHTML = '<p>No users found.</p>';
             return;
         }
         
         container.innerHTML = `
+            <table class="users-table">
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${allUsers.map(user => `
+                        <tr>
+                            <td>${user.email}</td>
+                            <td>
+                                <span class="role-badge role-${user.role}">
+                                    ${user.role}
+                                </span>
+                            </td>
+                            <td>${user.is_active ? '✅ Active' : '❌ Inactive'}</td>
+                            <td>${new Date(user.created_at).toLocaleDateString()}</td>
+                            <td>
+                                <button onclick="editUser('${user._id}')" class="btn btn-primary" style="margin-right: 10px;">
+                                    ✏️ Edit
+                                </button>
+                                ${user.role !== 'admin' ? 
+                                    `<button onclick="deleteUser('${user._id}')" class="btn btn-danger">🗑️ Delete</button>` :
+                                    '<span style="color: #666;">Protected</span>'
+                                }
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+    }
+    
+    // Load roles
+    async function loadRoles() {
+        try {
+            const result = await apiCall('/api/admin/roles');
+            allRoles = result.roles;
+            displayRoles();
+        } catch (error) {
+            handleApiError(error);
+        }
+    }
+    
+    // Display roles
+    function displayRoles() {
+        const container = document.getElementById('rolesContainer');
+        
+        container.innerHTML = `
             <div class="grid">
-                ${websites.map(website => `
+                ${allRoles.map(role => `
                     <div class="website-card">
-                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
-                            <h3>${website.title}</h3>
-                            <span class="status-badge ${website.is_published ? 'status-published' : 'status-draft'}">
-                                ${website.is_published ? '🟢 Live' : '🟡 Draft'}
-                            </span>
-                        </div>
-                        
+                        <h3>${role.name}</h3>
+                        <p>${role.description}</p>
                         <div class="website-meta">
-                            <p><strong>Type:</strong> ${website.business_type || 'General'}</p>
-                            <p><strong>Industry:</strong> ${website.industry || 'N/A'}</p>
-                            <p><strong>Created:</strong> ${new Date(website.created_at).toLocaleDateString()}</p>
-                            <p><strong>Last Updated:</strong> ${new Date(website.updated_at).toLocaleDateString()}</p>
+                            <p><strong>Permissions:</strong></p>
+                            <ul style="margin-left: 20px; color: #666;">
+                                ${role.permissions.map(perm => `<li>${perm}</li>`).join('')}
+                            </ul>
                         </div>
-                        
                         <div class="website-actions">
-                            ${website.is_published ? 
-                                `<a href="/api/preview/${website._id}" target="_blank" class="btn btn-success">👁️ View Live</a>` : 
-                                '<span class="btn" style="opacity: 0.5; cursor: not-allowed;">👁️ Not Published</span>'
+                            ${['admin', 'editor', 'viewer'].includes(role.name) ? 
+                                '<span class="btn" style="opacity: 0.5;">Protected Role</span>' :
+                                `<button onclick="editRole('${role._id}')" class="btn btn-primary">Edit</button>
+                                 <button onclick="deleteRole('${role._id}')" class="btn btn-danger">Delete</button>`
                             }
-                            <button onclick="editWebsite('${website._id}')" class="btn btn-primary">✏️ Edit</button>
-                            <button onclick="regenerateContent('${website._id}')" class="btn" style="background: #f39c12;">🔄 Regenerate</button>
-                            <button onclick="deleteWebsite('${website._id}')" class="btn btn-danger">🗑️ Delete</button>
                         </div>
                     </div>
                 `).join('')}
@@ -161,81 +527,114 @@
         `;
     }
     
-    function editWebsite(websiteId) {
-        const website = websites.find(w => w._id === websiteId);
-        if (!website) return;
-        
-        document.getElementById('editWebsiteId').value = websiteId;
-        document.getElementById('editTitle').value = website.title;
-        document.getElementById('editPublished').value = website.is_published.toString();
-        
-        document.getElementById('editModal').classList.remove('hidden');
-    }
-    
-    function closeEditModal() {
-        document.getElementById('editModal').classList.add('hidden');
-    }
-    
-    async function regenerateContent(websiteId) {
-        if (!confirm('Are you sure you want to regenerate the content? This will replace all current content.')) {
-            return;
+    // Load all websites
+    async function loadAllWebsites() {
+        try {
+            const result = await apiCall('/api/websites');
+            const websites = result.websites;
+            
+            const container = document.getElementById('allWebsitesContainer');
+            
+            if (websites.length === 0) {
+                container.innerHTML = '<p>No websites found.</p>';
+                return;
+            }
+            
+            container.innerHTML = `
+                <div class="grid">
+                    ${websites.map(website => `
+                        <div class="website-card">
+                            <h3>${website.title}</h3>
+                            <div class="website-meta">
+                                <p><strong>Owner:</strong> ${website.owner_email || 'Unknown'}</p>
+                                <p><strong>Type:</strong> ${website.business_type || 'General'}</p>
+                                <p><strong>Status:</strong> ${website.is_published ? '🟢 Published' : '🟡 Draft'}</p>
+                                <p><strong>Created:</strong> ${new Date(website.created_at).toLocaleDateString()}</p>
+                            </div>
+                            <div class="website-actions">
+                                ${website.is_published ? 
+                                    `<a href="/api/preview/${website._id}" target="_blank" class="btn btn-success">View</a>` : 
+                                    '<span class="btn" style="opacity: 0.5;">Not Published</span>'
+                                }
+                                <button onclick="adminEditWebsite('${website._id}')" class="btn btn-primary">Manage</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+        } catch (error) {
+            handleApiError(error);
         }
+    }
+    
+    // User management functions
+    async function editUser(userId) {
+        const user = allUsers.find(u => u._id === userId);
+        if (!user) return;
+        
+        // Load roles for dropdown
+        if (allRoles.length === 0) {
+            await loadRoles();
+        }
+        
+        document.getElementById('editUserId').value = userId;
+        document.getElementById('editUserEmail').value = user.email;
+        
+        const roleSelect = document.getElementById('editUserRole');
+        roleSelect.innerHTML = allRoles.map(role => 
+            `<option value="${role._id}" ${role.name === user.role ? 'selected' : ''}>${role.name}</option>`
+        ).join('');
+        
+        document.getElementById('userEditModal').classList.remove('hidden');
+    }
+    
+    function closeUserEditModal() {
+        document.getElementById('userEditModal').classList.add('hidden');
+    }
+    
+    async function deleteUser(userId) {
+        if (!confirm('Are you sure you want to delete this user?')) return;
         
         try {
-            showLoading('websitesContainer');
-            await apiCall(`/api/regenerate-content/${websiteId}`, 'POST');
-            showAlert('Content regenerated successfully!', 'success');
-            loadWebsites();
+            await apiCall(`/api/admin/users/${userId}`, 'DELETE');
+            showAlert('User deleted successfully!', 'success');
+            await loadUsers();
         } catch (error) {
-            showAlert(error.message, 'error');
-            loadWebsites();
+            handleApiError(error);
         }
     }
     
-    async function deleteWebsite(websiteId) {
-        if (!confirm('Are you sure you want to delete this website? This action cannot be undone.')) {
-            return;
-        }
-        
-        try {
-            await apiCall(`/api/websites/${websiteId}`, 'DELETE');
-            showAlert('Website deleted successfully!', 'success');
-            loadWebsites();
-        } catch (error) {
-            showAlert(error.message, 'error');
-        }
+    async function refreshUsers() {
+        await loadUsers();
+        showAlert('Users refreshed!', 'success');
     }
     
-    // Edit form submission
-    document.getElementById('editWebsiteForm').addEventListener('submit', async (e) => {
+    // Form submissions
+    document.getElementById('editUserForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        const websiteId = document.getElementById('editWebsiteId').value;
-        const formData = new FormData(e.target);
-        
-        const data = {
-            title: formData.get('title'),
-            is_published: formData.get('is_published') === 'true'
-        };
+        const userId = document.getElementById('editUserId').value;
+        const roleId = document.getElementById('editUserRole').value;
         
         try {
-            await apiCall(`/api/websites/${websiteId}`, 'PUT', data);
-            showAlert('Website updated successfully!', 'success');
-            closeEditModal();
-            loadWebsites();
+            await apiCall(`/api/admin/users/${userId}/role`, 'PUT', { role_id: roleId });
+            showAlert('User role updated successfully!', 'success');
+            closeUserEditModal();
+            await loadUsers();
         } catch (error) {
-            showAlert(error.message, 'error');
+            handleApiError(error);
         }
     });
     
-    // Close modal when clicking outside
-    document.getElementById('editModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeEditModal();
+    // Initialize admin dashboard
+    document.addEventListener('DOMContentLoaded', function() {
+        if (!checkAdminAccess()) {
+            return;
         }
+        
+        // Load initial dashboard data
+        loadTabData('dashboard');
     });
-    
-    // Load websites on page load
-    document.addEventListener('DOMContentLoaded', loadWebsites);
 </script>
 {% endblock %}
