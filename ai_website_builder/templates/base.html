@@ -262,7 +262,7 @@
             <div class="logo">🤖 AI Website Builder</div>
             <div class="nav-links" id="navLinks">
                 <a href="/dashboard" id="dashboardLink">Dashboard</a>
-                <a href="/my-websites" id="websitesLink">My Websites</a>
+                <a href="/my-websites" id="websitesLink">Websites</a>
                 <a href="/create-website" id="createLink" class="hidden">Create Website</a>
                 <a href="/admin" id="adminLink" class="hidden">Admin</a>
                 <span id="roleIndicator" class="role-indicator hidden"></span>
@@ -301,7 +301,7 @@
                 can_create: false,
                 can_edit: false,
                 can_delete: false,
-                can_view_all: false,
+                can_view_all: true,  // Can view published websites
                 can_access_admin: false
             }
         };
@@ -352,7 +352,20 @@
                     // Show/hide navigation links based on permissions
                     const createLink = document.getElementById('createLink');
                     const adminLink = document.getElementById('adminLink');
+                    const websitesLink = document.getElementById('websitesLink');
                     const roleIndicator = document.getElementById('roleIndicator');
+                    
+                    // Update "Websites" link text based on role
+                    if (userRole === 'viewer') {
+                        websitesLink.textContent = 'Browse Websites';
+                        websitesLink.title = 'Browse published websites';
+                    } else if (userRole === 'admin') {
+                        websitesLink.textContent = 'All Websites';
+                        websitesLink.title = 'Manage all websites';
+                    } else {
+                        websitesLink.textContent = 'My Websites';
+                        websitesLink.title = 'Manage your websites';
+                    }
                     
                     // Create Website link
                     if (permissions.can_create) {
@@ -368,8 +381,15 @@
                         adminLink.classList.add('hidden');
                     }
                     
-                    // Role indicator
-                    roleIndicator.textContent = `Role: ${userRole}`;
+                    // Role indicator with color coding
+                    const roleColors = {
+                        'admin': 'background: rgba(231, 76, 60, 0.8);',
+                        'editor': 'background: rgba(52, 152, 219, 0.8);',
+                        'viewer': 'background: rgba(46, 204, 113, 0.8);'
+                    };
+                    
+                    roleIndicator.textContent = `${userRole.charAt(0).toUpperCase() + userRole.slice(1)}`;
+                    roleIndicator.style = roleColors[userRole] || roleColors['viewer'];
                     roleIndicator.classList.remove('hidden');
                     
                 } catch (e) {

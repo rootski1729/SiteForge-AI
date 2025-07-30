@@ -1,27 +1,30 @@
 {% extends "base.html" %}
 
-{% block title %}My Websites - AI Website Builder{% endblock %}
+{% block title %}Websites - AI Website Builder{% endblock %}
 
 {% block content %}
 <div class="container">
     <div class="card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-            <h1>My Websites 📱</h1>
-            <a href="/create-website" class="btn btn-success">
-                ➕ Create New Website
-            </a>
+            <div>
+                <h1 id="pageTitle">My Websites 📱</h1>
+                <p id="pageDescription" style="color: #666; margin: 5px 0 0 0;"></p>
+            </div>
+            <div id="headerActions">
+                <!-- Actions will be loaded based on user role -->
+            </div>
         </div>
         
         <div id="websitesContainer">
             <div class="loading">
                 <div class="spinner"></div>
-                <p>Loading your websites...</p>
+                <p>Loading websites...</p>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Edit Website Modal - ONLY opens when Edit button is clicked -->
+<!-- Edit Website Modal - ONLY shows for editors/admins -->
 <div id="editModal" class="modal hidden">
     <div class="modal-content">
         <h2>Edit Website</h2>
@@ -99,7 +102,42 @@
 }
 
 .website-card {
-    cursor: default; /* Prevent cursor change */
+    cursor: default;
+}
+
+.filter-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 10px;
+}
+
+.filter-tab {
+    padding: 8px 16px;
+    border: none;
+    background: none;
+    color: #666;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s;
+}
+
+.filter-tab.active {
+    color: #3498db;
+    border-bottom-color: #3498db;
+}
+
+.filter-tab:hover {
+    background: #f8f9fa;
+}
+
+.owner-info {
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    font-size: 0.9em;
 }
 </style>
 {% endblock %}
@@ -107,10 +145,60 @@
 {% block extra_js %}
 <script>
     let websites = [];
+    let currentUserRole = null;
+    let filteredWebsites = [];
+    let currentFilter = 'all';
+    
+    // Get user role and permissions
+    function getUserRole() {
+        const userData = localStorage.getItem('user_data');
+        if (userData) {
+            try {
+                const user = JSON.parse(userData);
+                return user.role;
+            } catch (e) {
+                console.error('Error parsing user data:', e);
+            }
+        }
+        return 'viewer';
+    }
+    
+    // Update page based on user role
+    function updatePageForRole() {
+        currentUserRole = getUserRole();
+        const titleElement = document.getElementById('pageTitle');
+        const descriptionElement = document.getElementById('pageDescription');
+        const actionsElement = document.getElementById('headerActions');
+        
+        if (currentUserRole === 'viewer') {
+            titleElement.textContent = '🌐 Published Websites';
+            descriptionElement.textContent = 'Browse all published websites from our community';
+            actionsElement.innerHTML = `
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <span style="color: #666; font-size: 0.9em;">👁️ Viewing as: Viewer</span>
+                </div>
+            `;
+        } else if (currentUserRole === 'admin') {
+            titleElement.textContent = '🔧 All Websites (Admin)';
+            descriptionElement.textContent = 'Manage all websites in the system';
+            actionsElement.innerHTML = `
+                <div style="display: flex; gap: 10px;">
+                    <a href="/create-website" class="btn btn-success">➕ Create New Website</a>
+                    <button onclick="refreshWebsites()" class="btn">🔄 Refresh</button>
+                </div>
+            `;
+        } else {
+            titleElement.textContent = '📱 My Websites';
+            descriptionElement.textContent = 'Manage your created websites';
+            actionsElement.innerHTML = `
+                <a href="/create-website" class="btn btn-success">➕ Create New Website</a>
+            `;
+        }
+    }
     
     // Ensure modal is hidden on page load
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('Page loaded, ensuring modal is hidden...');
+        console.log('Page loaded, setting up for user role...');
         
         // Force hide the modal
         const modal = document.getElementById('editModal');
@@ -119,13 +207,16 @@
             modal.style.display = 'none';
         }
         
+        // Update page for current user role
+        updatePageForRole();
+        
         console.log('Loading websites...');
         loadWebsites();
     });
     
     async function loadWebsites() {
         try {
-            console.log('Loading websites...');
+            console.log('Loading websites for role:', currentUserRole);
             
             const authToken = localStorage.getItem('auth_token');
             if (!authToken) {
@@ -147,7 +238,7 @@
             
             const result = await response.json();
             websites = result.websites || [];
-            console.log('Websites loaded:', websites.length);
+            console.log('Websites loaded:', websites.length, 'Role:', currentUserRole);
             
             displayWebsites();
             
@@ -161,22 +252,56 @@
         const container = document.getElementById('websitesContainer');
         
         if (websites.length === 0) {
-            container.innerHTML = `
-                <div style="text-align: center; padding: 60px; color: #666;">
-                    <h3>No websites yet</h3>
-                    <p>Create your first AI-powered website to get started!</p>
-                    <a href="/create-website" class="btn btn-primary" style="margin-top: 20px;">
-                        🚀 Create First Website
-                    </a>
-                </div>
-            `;
+            if (currentUserRole === 'viewer') {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 60px; color: #666;">
+                        <h3>No published websites yet</h3>
+                        <p>Check back later to see amazing websites from our community!</p>
+                        <div style="margin-top: 20px;">
+                            <button onclick="loadWebsites()" class="btn btn-primary">🔄 Refresh</button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 60px; color: #666;">
+                        <h3>No websites yet</h3>
+                        <p>Create your first AI-powered website to get started!</p>
+                        <a href="/create-website" class="btn btn-primary" style="margin-top: 20px;">
+                            🚀 Create First Website
+                        </a>
+                    </div>
+                `;
+            }
             return;
         }
         
+        // Add filter tabs for admin
+        let filterTabs = '';
+        if (currentUserRole === 'admin') {
+            const publishedCount = websites.filter(w => w.is_published).length;
+            const draftCount = websites.filter(w => !w.is_published).length;
+            
+            filterTabs = `
+                <div class="filter-tabs">
+                    <button class="filter-tab active" onclick="filterWebsites('all')">
+                        All (${websites.length})
+                    </button>
+                    <button class="filter-tab" onclick="filterWebsites('published')">
+                        Published (${publishedCount})
+                    </button>
+                    <button class="filter-tab" onclick="filterWebsites('draft')">
+                        Drafts (${draftCount})
+                    </button>
+                </div>
+            `;
+        }
+        
         container.innerHTML = `
-            <div class="grid">
+            ${filterTabs}
+            <div class="grid" id="websitesGrid">
                 ${websites.map(website => `
-                    <div class="website-card">
+                    <div class="website-card" data-status="${website.is_published ? 'published' : 'draft'}">
                         <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
                             <h3>${website.title || 'Untitled Website'}</h3>
                             <span class="status-badge ${website.is_published ? 'status-published' : 'status-draft'}">
@@ -184,8 +309,14 @@
                             </span>
                         </div>
                         
+                        ${currentUserRole === 'admin' && website.owner_email ? `
+                            <div class="owner-info">
+                                👤 Owner: ${website.owner_email}
+                            </div>
+                        ` : ''}
+                        
                         <div class="website-meta">
-                            <p><strong>ID:</strong> <code style="font-size: 0.8em;">${website._id}</code></p>
+                            ${currentUserRole !== 'viewer' ? `<p><strong>ID:</strong> <code style="font-size: 0.8em;">${website._id}</code></p>` : ''}
                             <p><strong>Type:</strong> ${website.business_type || 'General'}</p>
                             <p><strong>Industry:</strong> ${website.industry || 'N/A'}</p>
                             <p><strong>Created:</strong> ${new Date(website.created_at).toLocaleDateString()}</p>
@@ -197,14 +328,40 @@
                                 `<a href="/api/preview/${website._id}" target="_blank" class="btn btn-success">👁️ View Live</a>` : 
                                 '<span class="btn" style="opacity: 0.5; cursor: not-allowed;">👁️ Not Published</span>'
                             }
-                            <button onclick="openEditModal('${website._id}')" class="btn btn-primary">✏️ Edit</button>
-                            <button onclick="regenerateContent('${website._id}')" class="btn" style="background: #f39c12;">🔄 Regenerate</button>
-                            <button onclick="deleteWebsite('${website._id}')" class="btn btn-danger">🗑️ Delete</button>
+                            
+                            ${currentUserRole === 'viewer' ? '' : `
+                                <button onclick="openEditModal('${website._id}')" class="btn btn-primary">✏️ Edit</button>
+                                <button onclick="regenerateContent('${website._id}')" class="btn" style="background: #f39c12;">🔄 Regenerate</button>
+                                <button onclick="deleteWebsite('${website._id}')" class="btn btn-danger">🗑️ Delete</button>
+                            `}
                         </div>
                     </div>
                 `).join('')}
             </div>
         `;
+    }
+    
+    function filterWebsites(filter) {
+        currentFilter = filter;
+        
+        // Update active tab
+        document.querySelectorAll('.filter-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        event.target.classList.add('active');
+        
+        // Filter website cards
+        const cards = document.querySelectorAll('.website-card');
+        cards.forEach(card => {
+            const status = card.getAttribute('data-status');
+            if (filter === 'all' || 
+                (filter === 'published' && status === 'published') ||
+                (filter === 'draft' && status === 'draft')) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
     }
     
     function showError(message) {
@@ -220,8 +377,18 @@
         `;
     }
     
-    // ONLY open modal when Edit button is clicked - NOT automatically
+    function refreshWebsites() {
+        loadWebsites();
+        showAlert('Websites refreshed!', 'success');
+    }
+    
+    // Modal functions - only for non-viewers
     function openEditModal(websiteId) {
+        if (currentUserRole === 'viewer') {
+            showAlert('Viewers cannot edit websites', 'warning');
+            return;
+        }
+        
         console.log('Opening edit modal for website:', websiteId);
         
         const website = websites.find(w => w._id === websiteId);
@@ -255,6 +422,11 @@
     }
     
     async function regenerateContent(websiteId) {
+        if (currentUserRole === 'viewer') {
+            showAlert('Viewers cannot regenerate content', 'warning');
+            return;
+        }
+        
         if (!confirm('Regenerate content? This will replace all current content.')) {
             return;
         }
@@ -270,18 +442,23 @@
             });
             
             if (response.ok) {
-                alert('Content regenerated successfully!');
+                showAlert('Content regenerated successfully!', 'success');
                 loadWebsites(); // Refresh the list
             } else {
                 const error = await response.json();
-                alert('Failed to regenerate content: ' + (error.error || response.statusText));
+                showAlert('Failed to regenerate content: ' + (error.error || response.statusText), 'error');
             }
         } catch (error) {
-            alert('Error: ' + error.message);
+            showAlert('Error: ' + error.message, 'error');
         }
     }
     
     async function deleteWebsite(websiteId) {
+        if (currentUserRole === 'viewer') {
+            showAlert('Viewers cannot delete websites', 'warning');
+            return;
+        }
+        
         if (!confirm('Delete this website? This cannot be undone.')) {
             return;
         }
@@ -297,20 +474,25 @@
             });
             
             if (response.ok) {
-                alert('Website deleted successfully!');
+                showAlert('Website deleted successfully!', 'success');
                 loadWebsites(); // Refresh the list
             } else {
                 const error = await response.json();
-                alert('Failed to delete website: ' + (error.error || response.statusText));
+                showAlert('Failed to delete website: ' + (error.error || response.statusText), 'error');
             }
         } catch (error) {
-            alert('Error: ' + error.message);
+            showAlert('Error: ' + error.message, 'error');
         }
     }
     
     // Handle form submission for editing
     document.getElementById('editWebsiteForm').addEventListener('submit', async (e) => {
         e.preventDefault();
+        
+        if (currentUserRole === 'viewer') {
+            showAlert('Viewers cannot edit websites', 'warning');
+            return;
+        }
         
         const websiteId = document.getElementById('editWebsiteId').value;
         const title = document.getElementById('editTitle').value.trim();
@@ -345,17 +527,17 @@
             console.log('Update response status:', response.status);
             
             if (response.ok) {
-                alert('Website updated successfully!');
+                showAlert('Website updated successfully!', 'success');
                 closeEditModal();
                 loadWebsites(); // Refresh the list to show updated data
             } else {
                 const errorText = await response.text();
                 console.error('Update failed:', errorText);
-                alert('Failed to update website: ' + errorText);
+                showAlert('Failed to update website: ' + errorText, 'error');
             }
         } catch (error) {
             console.error('Update error:', error);
-            alert('Error updating website: ' + error.message);
+            showAlert('Error updating website: ' + error.message, 'error');
         }
     });
     

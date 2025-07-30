@@ -4,28 +4,255 @@
 
 {% block content %}
 <div class="container">
-    <div class="card">
-        <h1>Welcome to AI Website Builder! 🚀</h1>
-        <p style="font-size: 1.1em; color: #666; margin-bottom: 30px;">
-            Create stunning websites powered by AI in just a few clicks.
-        </p>
-        
-        <!-- Role-based dashboard cards -->
-        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));" id="dashboardCards">
+    <!-- Welcome Section -->
+    <div class="hero-card">
+        <div class="hero-content">
+            <h1>Welcome to AI Website Builder! 🚀</h1>
+            <p>Create stunning websites powered by AI in just a few clicks. Transform your ideas into professional websites instantly.</p>
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <span class="stat-number">⚡</span>
+                    <span class="stat-label">AI-Powered</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">🎨</span>
+                    <span class="stat-label">Beautiful Templates</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">📱</span>
+                    <span class="stat-label">Mobile Ready</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Action Cards -->
+    <div class="action-section">
+        <h2 style="text-align: center; margin-bottom: 30px; color: #2c3e50;">What would you like to do?</h2>
+        <div class="grid" id="dashboardCards">
             <!-- Cards will be loaded based on user role -->
         </div>
     </div>
     
-    <div class="card">
-        <h2>Recent Websites</h2>
-        <div id="recentWebsites">
-            <div class="loading">
-                <div class="spinner"></div>
-                <p>Loading your websites...</p>
+    <!-- Features Showcase -->
+    <div class="features-section">
+        <h2 style="text-align: center; margin-bottom: 30px; color: #2c3e50;">Platform Features</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🤖</div>
+                <h3>AI Content Generation</h3>
+                <p>Our advanced AI creates professional content tailored to your business type and industry.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎨</div>
+                <h3>Beautiful Templates</h3>
+                <p>Choose from professionally designed templates that look great on all devices.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Instant Publishing</h3>
+                <p>Publish your website instantly and share it with the world in just one click.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📱</div>
+                <h3>Mobile Responsive</h3>
+                <p>All websites automatically adapt to look perfect on phones, tablets, and desktops.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔄</div>
+                <h3>Easy Updates</h3>
+                <p>Make changes anytime or regenerate content with AI whenever you need fresh copy.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">👥</div>
+                <h3>Team Collaboration</h3>
+                <p>Work with your team using role-based permissions and access controls.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Tips -->
+    <div class="tips-section">
+        <h2 style="text-align: center; margin-bottom: 30px; color: #2c3e50;">Quick Tips</h2>
+        <div class="tips-grid">
+            <div class="tip-card">
+                <div class="tip-icon">💡</div>
+                <h4>Getting Started</h4>
+                <p>Click "Create New Website" and fill in your business details. Our AI will handle the rest!</p>
+            </div>
+            <div class="tip-card">
+                <div class="tip-icon">🎯</div>
+                <h4>Better Results</h4>
+                <p>Be specific about your business type and industry for more targeted AI content generation.</p>
+            </div>
+            <div class="tip-card">
+                <div class="tip-icon">🚀</div>
+                <h4>Publishing</h4>
+                <p>Preview your website first, then publish it to make it live and accessible to everyone.</p>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 50px 40px;
+        margin-bottom: 40px;
+        text-align: center;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    }
+    
+    .hero-content h1 {
+        font-size: 2.5em;
+        margin-bottom: 20px;
+        font-weight: 700;
+    }
+    
+    .hero-content p {
+        font-size: 1.2em;
+        margin-bottom: 30px;
+        opacity: 0.9;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .hero-stats {
+        display: flex;
+        justify-content: center;
+        gap: 40px;
+        margin-top: 30px;
+    }
+    
+    .stat-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .stat-number {
+        font-size: 2em;
+    }
+    
+    .stat-label {
+        font-size: 0.9em;
+        opacity: 0.8;
+    }
+    
+    .action-section {
+        margin-bottom: 50px;
+    }
+    
+    .features-section {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        margin-bottom: 40px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+    
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+    }
+    
+    .feature-card {
+        text-align: center;
+        padding: 20px;
+        border-radius: 15px;
+        background: #f8f9fa;
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    
+    .feature-icon {
+        font-size: 3em;
+        margin-bottom: 15px;
+    }
+    
+    .feature-card h3 {
+        color: #2c3e50;
+        margin-bottom: 15px;
+        font-size: 1.3em;
+    }
+    
+    .feature-card p {
+        color: #666;
+        line-height: 1.6;
+    }
+    
+    .tips-section {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+    
+    .tips-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 25px;
+    }
+    
+    .tip-card {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        padding: 25px;
+        border-radius: 15px;
+        text-align: center;
+        transition: transform 0.3s;
+    }
+    
+    .tip-card:hover {
+        transform: translateY(-3px);
+    }
+    
+    .tip-icon {
+        font-size: 2.5em;
+        margin-bottom: 15px;
+    }
+    
+    .tip-card h4 {
+        margin-bottom: 10px;
+        font-size: 1.2em;
+    }
+    
+    .tip-card p {
+        opacity: 0.9;
+        line-height: 1.5;
+    }
+    
+    @media (max-width: 768px) {
+        .hero-card {
+            padding: 30px 20px;
+        }
+        
+        .hero-content h1 {
+            font-size: 2em;
+        }
+        
+        .hero-stats {
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .features-grid,
+        .tips-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
 {% endblock %}
 
 {% block extra_js %}
@@ -54,7 +281,7 @@
             can_create: false,
             can_edit: false,
             can_delete: false,
-            can_view_all: false,
+            can_view_all: true,  // Can view published websites
             can_manage_users: false,
             can_access_admin: false
         }
@@ -83,50 +310,80 @@
         // Create Website Card (Only for admin and editor)
         if (permissions.can_create) {
             cards.push(`
-                <div class="website-card" style="text-align: center;">
-                    <h3>🤖 Create New Website</h3>
-                    <p>Use AI to generate a professional website for your business</p>
-                    <a href="/create-website" class="btn btn-primary" style="margin-top: 15px;">
+                <div class="website-card" style="text-align: center; background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%); color: white;">
+                    <div class="feature-icon" style="font-size: 3em; margin-bottom: 15px;">🤖</div>
+                    <h3 style="color: white;">Create New Website</h3>
+                    <p style="color: rgba(255,255,255,0.9); margin-bottom: 20px;">Use AI to generate a professional website for your business in minutes</p>
+                    <a href="/create-website" class="btn" style="background: rgba(255,255,255,0.2); color: white; border: 2px solid white;">
                         Start Creating
                     </a>
                 </div>
             `);
         }
         
-        // My Websites Card (For all users - but functionality differs)
-        cards.push(`
-            <div class="website-card" style="text-align: center;">
-                <h3>📱 My Websites</h3>
-                <p>${permissions.can_edit ? 'View and manage all your created websites' : 'View your websites'}</p>
-                <a href="/my-websites" class="btn btn-primary" style="margin-top: 15px;">
-                    View Websites
-                </a>
-            </div>
-        `);
+        // Websites Card - Different text based on role
+        if (currentUserRole === 'viewer') {
+            cards.push(`
+                <div class="website-card" style="text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <div class="feature-icon" style="font-size: 3em; margin-bottom: 15px;">🌐</div>
+                    <h3 style="color: white;">Browse Published Websites</h3>
+                    <p style="color: rgba(255,255,255,0.9); margin-bottom: 20px;">Explore amazing websites created by our community</p>
+                    <a href="/my-websites" class="btn" style="background: rgba(255,255,255,0.2); color: white; border: 2px solid white;">
+                        Browse Gallery
+                    </a>
+                </div>
+            `);
+        } else {
+            cards.push(`
+                <div class="website-card" style="text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <div class="feature-icon" style="font-size: 3em; margin-bottom: 15px;">📱</div>
+                    <h3 style="color: white;">My Websites</h3>
+                    <p style="color: rgba(255,255,255,0.9); margin-bottom: 20px;">${permissions.can_edit ? 'View and manage all your created websites' : 'View your websites'}</p>
+                    <a href="/my-websites" class="btn" style="background: rgba(255,255,255,0.2); color: white; border: 2px solid white;">
+                        Manage Websites
+                    </a>
+                </div>
+            `);
+        }
         
         // Admin Panel Card (Only for admin)
         if (permissions.can_access_admin) {
             cards.push(`
-                <div class="website-card" style="text-align: center;">
-                    <h3>⚙️ Admin Panel</h3>
-                    <p>Manage users, roles, and system settings</p>
-                    <a href="/admin" class="btn btn-danger" style="margin-top: 15px;">
-                        Admin Panel
+                <div class="website-card" style="text-align: center; background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); color: white;">
+                    <div class="feature-icon" style="font-size: 3em; margin-bottom: 15px;">⚙️</div>
+                    <h3 style="color: white;">Admin Panel</h3>
+                    <p style="color: rgba(255,255,255,0.9); margin-bottom: 20px;">Manage users, roles, and system settings</p>
+                    <a href="/admin" class="btn" style="background: rgba(255,255,255,0.2); color: white; border: 2px solid white;">
+                        Admin Dashboard
                     </a>
                 </div>
             `);
         }
         
         // Role-specific info card
+        const roleDescriptions = {
+            'admin': 'Full system access - manage everything',
+            'editor': 'Create and manage your own websites',
+            'viewer': 'Browse and view all published websites'
+        };
+        
+        const roleColors = {
+            'admin': 'background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);',
+            'editor': 'background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);',
+            'viewer': 'background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);'
+        };
+        
         cards.push(`
-            <div class="website-card" style="text-align: center; background: #f8f9fa; border: 2px solid #e9ecef;">
-                <h3>👤 Your Role: ${currentUserRole || 'Guest'}</h3>
-                <div style="text-align: left; margin-top: 15px;">
-                    <p><strong>Permissions:</strong></p>
-                    <ul style="margin-left: 20px; color: #666;">
+            <div class="website-card" style="text-align: center; ${roleColors[currentUserRole] || roleColors['viewer']} color: white;">
+                <div class="feature-icon" style="font-size: 3em; margin-bottom: 15px;">👤</div>
+                <h3 style="color: white;">Your Role: ${currentUserRole ? currentUserRole.charAt(0).toUpperCase() + currentUserRole.slice(1) : 'Guest'}</h3>
+                <p style="color: rgba(255,255,255,0.9); margin-bottom: 15px;">${roleDescriptions[currentUserRole] || 'Limited access'}</p>
+                <div style="text-align: left; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px;">
+                    <p style="color: white; margin-bottom: 10px;"><strong>Permissions:</strong></p>
+                    <ul style="margin-left: 20px; color: rgba(255,255,255,0.9);">
                         <li>${permissions.can_create ? '✅' : '❌'} Create websites</li>
                         <li>${permissions.can_edit ? '✅' : '❌'} Edit websites</li>
-                        <li>${permissions.can_delete ? '✅' : '❌'} Delete websites</li>
+                        <li>${permissions.can_view_all ? '✅' : '❌'} View published websites</li>
                         <li>${permissions.can_access_admin ? '✅' : '❌'} Admin access</li>
                     </ul>
                 </div>
@@ -136,67 +393,7 @@
         cardsContainer.innerHTML = cards.join('');
     }
     
-    async function loadRecentWebsites() {
-        const permissions = getUserPermissions();
-        
-        try {
-            const result = await apiCall('/api/websites');
-            const websitesContainer = document.getElementById('recentWebsites');
-            
-            if (result.websites && result.websites.length > 0) {
-                const recentWebsites = result.websites.slice(0, 3); // Show only first 3
-                
-                websitesContainer.innerHTML = recentWebsites.map(website => `
-                    <div class="website-card">
-                        <h3>${website.title}</h3>
-                        <div class="website-meta">
-                            <p><strong>Type:</strong> ${website.business_type || 'General'}</p>
-                            <p><strong>Industry:</strong> ${website.industry || 'N/A'}</p>
-                            <p><strong>Status:</strong> ${website.is_published ? '🟢 Published' : '🟡 Draft'}</p>
-                            <p><strong>Created:</strong> ${new Date(website.created_at).toLocaleDateString()}</p>
-                        </div>
-                        <div class="website-actions">
-                            ${website.is_published ? 
-                                `<a href="/api/preview/${website._id}" target="_blank" class="btn btn-success">View Site</a>` : 
-                                '<span class="btn" style="opacity: 0.5;">Not Published</span>'
-                            }
-                            ${permissions.can_edit ? 
-                                '<a href="/my-websites" class="btn btn-primary">Manage</a>' :
-                                '<a href="/my-websites" class="btn btn-primary">View Details</a>'
-                            }
-                        </div>
-                    </div>
-                `).join('');
-            } else {
-                if (permissions.can_create) {
-                    websitesContainer.innerHTML = `
-                        <div style="text-align: center; padding: 40px; color: #666;">
-                            <h3>No websites yet</h3>
-                            <p>Create your first AI-powered website!</p>
-                            <a href="/create-website" class="btn btn-primary" style="margin-top: 15px;">
-                                Create First Website
-                            </a>
-                        </div>
-                    `;
-                } else {
-                    websitesContainer.innerHTML = `
-                        <div style="text-align: center; padding: 40px; color: #666;">
-                            <h3>No websites yet</h3>
-                            <p>You don't have permission to create websites. Contact your administrator if you need access.</p>
-                        </div>
-                    `;
-                }
-            }
-        } catch (error) {
-            document.getElementById('recentWebsites').innerHTML = `
-                <div style="text-align: center; padding: 40px; color: #e74c3c;">
-                    <p>Error loading websites: ${error.message}</p>
-                </div>
-            `;
-        }
-    }
-    
-    // Redirect based on permissions
+    // Check page access permissions
     function checkPageAccess() {
         const permissions = getUserPermissions();
         const currentPage = window.location.pathname;
@@ -231,7 +428,6 @@
         
         // Load role-based dashboard
         loadDashboardCards();
-        loadRecentWebsites();
         
         // Also update navigation based on role
         updateNavigation();

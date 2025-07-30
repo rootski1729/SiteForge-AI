@@ -38,21 +38,43 @@ def validate_object_id(obj_id):
 def get_websites():
     try:
         user_role = request.current_user.get('role', {})
+        user_id = request.current_user['_id']
         
         if user_role.get('name') == 'admin':
+            # Admin sees all websites
             websites = Website.get_all_websites()
+        elif user_role.get('name') == 'viewer':
+            # Viewers see only published websites
+            websites = Website.get_published_websites()
+            print(f"[DEBUG] Viewer {user_id} retrieved {len(websites)} published websites")
         else:
-            user_id = request.current_user['_id']
+            # Editor and other roles see their own websites
             websites = Website.find_by_owner(user_id)
         
         # Serialize ObjectIds
         websites = serialize_object_id(websites)
         
-        print(f"[DEBUG] Retrieved {len(websites)} websites for user")
+        print(f"[DEBUG] Retrieved {len(websites)} websites for user role: {user_role.get('name')}")
         return jsonify({'websites': websites}), 200
         
     except Exception as e:
         print(f"Error in get_websites: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@api_bp.route('/websites/published', methods=['GET'])
+def get_published_websites_public():
+    """Public endpoint for published websites - no auth required"""
+    try:
+        websites = Website.get_published_websites()
+        
+        # Serialize ObjectIds
+        websites = serialize_object_id(websites)
+        
+        print(f"[DEBUG] Retrieved {len(websites)} published websites for public access")
+        return jsonify({'websites': websites}), 200
+        
+    except Exception as e:
+        print(f"Error in get_published_websites_public: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @api_bp.route('/websites/<website_id>', methods=['GET'])
@@ -70,11 +92,20 @@ def get_website(website_id):
         
         user_role = request.current_user.get('role', {})
         current_user_id = str(request.current_user['_id'])
+        website_owner_id = str(website_data['owner_id'])
         
-        # Check permissions
-        if (user_role.get('name') not in ['admin', 'viewer'] and 
-            str(website_data['owner_id']) != current_user_id):
-            return jsonify({'error': 'Access denied'}), 403
+        # Check permissions based on role
+        if user_role.get('name') == 'admin':
+            # Admin can see all websites
+            pass
+        elif user_role.get('name') == 'viewer':
+            # Viewers can only see published websites
+            if not website_data.get('is_published', False):
+                return jsonify({'error': 'Access denied - website not published'}), 403
+        else:
+            # Editor and others can see their own websites
+            if website_owner_id != current_user_id:
+                return jsonify({'error': 'Access denied - not your website'}), 403
         
         # Serialize ObjectIds
         website_data = serialize_object_id(website_data)
@@ -116,8 +147,13 @@ def update_website(website_id):
         
         print(f"[DEBUG] User: {current_user_id}, Owner: {website_owner_id}, Role: {user_role.get('name')}")
         
-        # Check permissions
-        if (user_role.get('name') != 'admin' and website_owner_id != current_user_id):
+        # Check permissions - viewers cannot edit websites
+        if user_role.get('name') == 'viewer':
+            return jsonify({
+                'error': 'Access denied - viewers cannot edit websites',
+                'reason': 'Viewers have read-only access to published websites'
+            }), 403
+        elif user_role.get('name') != 'admin' and website_owner_id != current_user_id:
             return jsonify({
                 'error': 'Access denied',
                 'reason': 'You can only edit your own websites'
@@ -188,8 +224,10 @@ def delete_website(website_id):
         user_role = request.current_user.get('role', {})
         current_user_id = str(request.current_user['_id'])
         
-        # Check permissions
-        if (user_role.get('name') != 'admin' and 
+        # Check permissions - viewers cannot delete websites
+        if user_role.get('name') == 'viewer':
+            return jsonify({'error': 'Access denied - viewers cannot delete websites'}), 403
+        elif (user_role.get('name') != 'admin' and 
             str(website_data['owner_id']) != current_user_id):
             return jsonify({'error': 'Access denied'}), 403
         
