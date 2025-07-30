@@ -66,6 +66,11 @@
     z-index: 1000;
 }
 
+/* Ensure hidden class takes precedence */
+.modal.hidden {
+    display: none !important;
+}
+
 .modal-content {
     background: white;
     padding: 30px;
@@ -102,6 +107,21 @@
 {% block extra_js %}
 <script>
     let websites = [];
+    
+    // Ensure modal is hidden on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Page loaded, ensuring modal is hidden...');
+        
+        // Force hide the modal
+        const modal = document.getElementById('editModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.style.display = 'none';
+        }
+        
+        console.log('Loading websites...');
+        loadWebsites();
+    });
     
     async function loadWebsites() {
         try {
@@ -217,11 +237,15 @@
         document.getElementById('currentWebsiteId').textContent = websiteId;
         
         // Show the modal
-        document.getElementById('editModal').classList.remove('hidden');
+        const modal = document.getElementById('editModal');
+        modal.classList.remove('hidden');
+        modal.style.display = 'flex';
     }
     
     function closeEditModal() {
-        document.getElementById('editModal').classList.add('hidden');
+        const modal = document.getElementById('editModal');
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
         
         // Clear form
         document.getElementById('editWebsiteId').value = '';
@@ -347,12 +371,6 @@
         if (e.key === 'Escape') {
             closeEditModal();
         }
-    });
-    
-    // Initialize - Load websites when page loads
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('Page loaded, loading websites...');
-        loadWebsites();
     });
 </script>
 {% endblock %}
