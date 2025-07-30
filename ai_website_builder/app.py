@@ -4,15 +4,13 @@ from flask import render_template
 from app import create_app
 import os
 
-# Create the Flask app using the factory pattern
-app = create_app()
+app=create_app()
 
-# Health check route (can be moved to a separate blueprint if needed)
+
 @app.route('/health')
 def health_check():
     return {'status': 'healthy', 'message': 'AI Website Builder API is running'}
 
-# Frontend Routes - Move these to a separate blueprint for better organization
 @app.route('/')
 def index():
     return '''

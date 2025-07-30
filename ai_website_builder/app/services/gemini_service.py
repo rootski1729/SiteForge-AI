@@ -5,11 +5,11 @@ import json
 class GeminiService:
     def __init__(self):
         genai.configure(api_key=current_app.config['GEMINI_API_KEY'])
-        self.model = genai.GenerativeModel('gemini-pro')
+        self.model=genai.GenerativeModel('gemini-pro')
     
     def generate_website_content(self, business_type, industry, company_name=None):
         try:
-            prompt = f"""
+            prompt=f"""
             Create a professional website content structure for a {business_type} business in the {industry} industry.
             Company name: {company_name or 'Your Company'}
             
@@ -35,22 +35,21 @@ class GeminiService:
                 ],
                 "contact": {{
                     "title": "Contact section title",
-                    "content": "Contact section content"}}
-            }}
+                    "content": "Contact section content"}}}}
             
             Make it professional and specific to the {business_type} in {industry} industry.
             Return only valid JSON without any markdown formatting.
             """
             
-            response = self.model.generate_content(prompt)
+            response=self.model.generate_content(prompt)
 
-            content = response.text.strip()
+            content=response.text.strip()
             if content.startswith('```json'):
-                content = content[7:]
+                content=content[7:]
             if content.endswith('```'):
-                content = content[:-3]
+                content=content[:-3]
             if isinstance(content, str):
-                website_data = json.loads(content)
+                website_data=json.loads(content)
 
             return website_data
             
@@ -59,7 +58,7 @@ class GeminiService:
             return self.get_fallback_content(business_type, industry, company_name)
     
     def get_fallback_content(self, business_type, industry, company_name=None):
-        company = company_name or "Your Company"
+        company=company_name or "Your Company"
         
         return {
             "hero": {

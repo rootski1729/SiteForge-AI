@@ -3,8 +3,7 @@ from bson.objectid import ObjectId
 from datetime import datetime
 
 class Permission:
-    # Available permissions in the system
-    PERMISSIONS = [
+    PERMISSIONS=[
         'create_website',
         'read_website', 
         'update_website',

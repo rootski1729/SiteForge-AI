@@ -5,7 +5,7 @@ from app.models.user import User
 from app.models.role import Role
 
 def generate_token(user_id):
-    payload = {
+    payload={
         'user_id': user_id,
         'exp': datetime.now(timezone.utc)
         + current_app.config['JWT_ACCESS_TOKEN_EXPIRES'],
@@ -15,7 +15,7 @@ def generate_token(user_id):
 
 def decode_token(token):
     try:
-        payload = jwt.decode(token, current_app.config['JWT_SECRET_KEY'], algorithms=['HS256'])
+        payload=jwt.decode(token, current_app.config['JWT_SECRET_KEY'], algorithms=['HS256'])
         return payload
     except jwt.ExpiredSignatureError:
         return None
@@ -23,11 +23,11 @@ def decode_token(token):
         return None
 
 def get_user_from_token(token):
-    payload = decode_token(token)
+    payload=decode_token(token)
     if payload:
-        user_data = User.find_by_id(payload['user_id'])
+        user_data=User.find_by_id(payload['user_id'])
         if user_data:
-            role_data = Role.find_by_id(user_data['role_id'])
-            user_data['role'] = role_data
+            role_data=Role.find_by_id(user_data['role_id'])
+            user_data['role']=role_data
             return user_data
     return None

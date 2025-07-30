@@ -7,11 +7,10 @@ from bson.objectid import ObjectId
 from bson.errors import InvalidId
 
 def serialize_object_id(obj):
-    """Convert ObjectId to string in MongoDB documents"""
     if isinstance(obj, dict):
         for key, value in obj.items():
             if isinstance(value, ObjectId):
-                obj[key] = str(value)
+                obj[key]=str(value)
             elif isinstance(value, dict):
                 serialize_object_id(value)
             elif isinstance(value, list):
@@ -37,22 +36,17 @@ def validate_object_id(obj_id):
 @require_permission('read_website')
 def get_websites():
     try:
-        user_role = request.current_user.get('role', {})
-        user_id = request.current_user['_id']
+        user_role=request.current_user.get('role', {})
+        user_id=request.current_user['_id']
         
         if user_role.get('name') == 'admin':
-            # Admin sees all websites
-            websites = Website.get_all_websites()
+            websites=Website.get_all_websites()
         elif user_role.get('name') == 'viewer':
-            # Viewers see only published websites
-            websites = Website.get_published_websites()
+            websites=Website.get_published_websites()
             print(f"[DEBUG] Viewer {user_id} retrieved {len(websites)} published websites")
         else:
-            # Editor and other roles see their own websites
-            websites = Website.find_by_owner(user_id)
-        
-        # Serialize ObjectIds
-        websites = serialize_object_id(websites)
+            websites=Website.find_by_owner(user_id)
+        websites=serialize_object_id(websites)
         
         print(f"[DEBUG] Retrieved {len(websites)} websites for user role: {user_role.get('name')}")
         return jsonify({'websites': websites}), 200
@@ -63,12 +57,10 @@ def get_websites():
 
 @api_bp.route('/websites/published', methods=['GET'])
 def get_published_websites_public():
-    """Public endpoint for published websites - no auth required"""
     try:
-        websites = Website.get_published_websites()
+        websites=Website.get_published_websites()
         
-        # Serialize ObjectIds
-        websites = serialize_object_id(websites)
+        websites=serialize_object_id(websites)
         
         print(f"[DEBUG] Retrieved {len(websites)} published websites for public access")
         return jsonify({'websites': websites}), 200
@@ -82,33 +74,28 @@ def get_published_websites_public():
 @require_permission('read_website')
 def get_website(website_id):
     try:
-        # Validate ObjectId format
         if not validate_object_id(website_id):
             return jsonify({'error': 'Invalid website ID format'}), 400
         
-        website_data = Website.find_by_id(website_id)
+        website_data=Website.find_by_id(website_id)
         if not website_data:
             return jsonify({'error': f'Website with ID {website_id} not found'}), 404
         
-        user_role = request.current_user.get('role', {})
-        current_user_id = str(request.current_user['_id'])
-        website_owner_id = str(website_data['owner_id'])
+        user_role=request.current_user.get('role', {})
+        current_user_id=str(request.current_user['_id'])
+        website_owner_id=str(website_data['owner_id'])
         
-        # Check permissions based on role
         if user_role.get('name') == 'admin':
-            # Admin can see all websites
+
             pass
         elif user_role.get('name') == 'viewer':
-            # Viewers can only see published websites
             if not website_data.get('is_published', False):
                 return jsonify({'error': 'Access denied - website not published'}), 403
         else:
-            # Editor and others can see their own websites
             if website_owner_id != current_user_id:
                 return jsonify({'error': 'Access denied - not your website'}), 403
         
-        # Serialize ObjectIds
-        website_data = serialize_object_id(website_data)
+        website_data=serialize_object_id(website_data)
         
         return jsonify({'website': website_data}), 200
         
@@ -123,54 +110,48 @@ def update_website(website_id):
     try:
         print(f"[DEBUG] Updating website with ID: {website_id}")
         
-        # Validate ObjectId format
         if not validate_object_id(website_id):
             print(f"[ERROR] Invalid ObjectId format: {website_id}")
             return jsonify({
                 'error': 'Invalid website ID format',
                 'provided_id': website_id,
-                'valid_format': 'ObjectId must be 24 characters long and contain only hexadecimal characters'
-            }), 400
+                'valid_format': 'ObjectId must be 24 characters long and contain only hexadecimal characters'}), 400
         
-        website_data = Website.find_by_id(website_id)
+        website_data=Website.find_by_id(website_id)
         if not website_data:
             print(f"[ERROR] Website not found in database: {website_id}")
             return jsonify({
                 'error': f'Website with ID {website_id} not found',
                 'provided_id': website_id,
-                'suggestion': 'The website may have been deleted or the ID is incorrect'
-            }), 404
+                'suggestion': 'The website may have been deleted or the ID is incorrect'}), 404
         
-        user_role = request.current_user.get('role', {})
-        current_user_id = str(request.current_user['_id'])
-        website_owner_id = str(website_data['owner_id'])
+        user_role=request.current_user.get('role', {})
+        current_user_id=str(request.current_user['_id'])
+        website_owner_id=str(website_data['owner_id'])
         
         print(f"[DEBUG] User: {current_user_id}, Owner: {website_owner_id}, Role: {user_role.get('name')}")
         
-        # Check permissions - viewers cannot edit websites
         if user_role.get('name') == 'viewer':
             return jsonify({
                 'error': 'Access denied - viewers cannot edit websites',
-                'reason': 'Viewers have read-only access to published websites'
-            }), 403
+                'reason': 'Viewers have read-only access to published websites'}), 403
         elif user_role.get('name') != 'admin' and website_owner_id != current_user_id:
             return jsonify({
                 'error': 'Access denied',
-                'reason': 'You can only edit your own websites'
-            }), 403
+                'reason': 'You can only edit your own websites'}), 403
         
-        data = request.get_json()
+        data=request.get_json()
         if not data:
             return jsonify({'error': 'No data provided in request body'}), 400
         
         print(f"[DEBUG] Update data: {data}")
         
-        update_data = {}
-        allowed_fields = ['title', 'content', 'is_published', 'template_id']
+        update_data={}
+        allowed_fields=['title', 'content', 'is_published', 'template_id']
         
         for field in allowed_fields:
             if field in data:
-                update_data[field] = data[field]
+                update_data[field]=data[field]
         
         if not update_data:
             return jsonify({
@@ -181,24 +162,20 @@ def update_website(website_id):
         
         print(f"[DEBUG] Validated update data: {update_data}")
         
-        # Perform the update
-        result = Website.update_website(website_id, update_data)
+        result=Website.update_website(website_id, update_data)
         
         if result.modified_count == 0:
             print(f"[WARNING] No documents were modified for website ID: {website_id}")
-            # Check if website still exists
             if not Website.find_by_id(website_id):
                 return jsonify({
                     'error': 'Website was deleted during the update process',
-                    'website_id': website_id
-                }), 404
+                    'website_id': website_id}), 404
         
         print(f"[DEBUG] Website updated successfully: {website_id}")
         return jsonify({
             'message': 'Website updated successfully',
             'website_id': website_id,
-            'updated_fields': list(update_data.keys())
-        }), 200
+            'updated_fields': list(update_data.keys())}), 200
         
     except Exception as e:
         print(f"Error in update_website: {str(e)}")
@@ -213,18 +190,15 @@ def update_website(website_id):
 @require_permission('delete_website')
 def delete_website(website_id):
     try:
-        # Validate ObjectId format
         if not validate_object_id(website_id):
             return jsonify({'error': 'Invalid website ID format'}), 400
         
-        website_data = Website.find_by_id(website_id)
+        website_data=Website.find_by_id(website_id)
         if not website_data:
             return jsonify({'error': f'Website with ID {website_id} not found'}), 404
         
-        user_role = request.current_user.get('role', {})
-        current_user_id = str(request.current_user['_id'])
-        
-        # Check permissions - viewers cannot delete websites
+        user_role=request.current_user.get('role', {})
+        current_user_id=str(request.current_user['_id'])
         if user_role.get('name') == 'viewer':
             return jsonify({'error': 'Access denied - viewers cannot delete websites'}), 403
         elif (user_role.get('name') != 'admin' and 
@@ -241,24 +215,21 @@ def delete_website(website_id):
 @api_bp.route('/preview/<website_id>')
 def preview_website(website_id):
     try:
-        # Validate ObjectId format
         if not validate_object_id(website_id):
             return "Invalid website ID format", 400
         
-        website_data = Website.find_by_id(website_id)
+        website_data=Website.find_by_id(website_id)
         if not website_data:
             return "Website not found", 404
         
         if not website_data.get('is_published', False):
             return "Website not published", 403
         
-        content = website_data.get('content', {})
-        
-        # Handle case where content might be a string (fallback content)
+        content=website_data.get('content', {})
         if isinstance(content, str):
             return f"<html><body><h1>{website_data.get('title', 'Website')}</h1><div>{content}</div></body></html>"
         
-        template = """
+        template="""
         <!DOCTYPE html>
         <html lang="en">
         <head>
@@ -322,11 +293,10 @@ def preview_website(website_id):
         </html>
         """
         
-        # Extract content safely
-        hero = content.get('hero', {})
-        about = content.get('about', {})
-        services = content.get('services', [])
-        contact = content.get('contact', {})
+        hero=content.get('hero', {})
+        about=content.get('about', {})
+        services=content.get('services', [])
+        contact=content.get('contact', {})
         
         return render_template_string(template, 
                                     title=website_data.get('title', 'Website'),

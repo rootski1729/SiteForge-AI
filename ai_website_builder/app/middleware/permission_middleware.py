@@ -18,8 +18,7 @@ def require_permission(permission):
                 if permission not in user_permissions:
                     return jsonify({
                         'error': f'Insufficient permissions. Required: {permission}',
-                        'user_permissions': user_permissions
-                    }), 403
+                        'user_permissions': user_permissions}), 403
                 
                 return f(*args, **kwargs)
             except Exception as e:
@@ -40,8 +39,7 @@ def require_role(role_name):
                 if not user_role or user_role.get('name') != role_name:
                     current_role = user_role.get('name', 'unknown') if user_role else 'none'
                     return jsonify({
-                        'error': f'Role {role_name} required. Current role: {current_role}'
-                    }), 403
+                        'error': f'Role {role_name} required. Current role: {current_role}'}), 403
                 
                 return f(*args, **kwargs)
             except Exception as e:

@@ -21,7 +21,7 @@ class TemplateService:
     
     @staticmethod
     def get_template_html(template_id='default'):
-        templates = {
+        templates={
             'default': """
             <!DOCTYPE html>
             <html lang="en">

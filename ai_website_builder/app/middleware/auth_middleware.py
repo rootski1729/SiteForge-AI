@@ -11,7 +11,6 @@ def require_auth(f):
             
             if auth_header:
                 try:
-                    # Extract token from "Bearer <token>" format
                     token = auth_header.split(" ")[1] 
                 except IndexError:
                     return jsonify({'error': 'Invalid token format. Use: Bearer <token>'}), 401
@@ -23,11 +22,9 @@ def require_auth(f):
             if not current_user:
                 return jsonify({'error': 'Token is invalid or expired'}), 401
             
-            # Check if user is active
             if not current_user.get('is_active', True):
                 return jsonify({'error': 'Account is deactivated'}), 401
             
-            # Attach user to request object
             request.current_user = current_user
             return f(*args, **kwargs)
             
