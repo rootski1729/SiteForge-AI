@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}Create Website - AI Website Builder{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <h1>🤖 Create AI-Powered Website</h1>
+        <p style="color: #666; margin-bottom: 30px;">
+            Tell us about your business and our AI will create a professional website for you!
+        </p>
+        
+        <form id="createWebsiteForm">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                <div>
+                    <div class="form-group">
+                        <label for="companyName">Company/Business Name</label>
+                        <input type="text" id="companyName" name="companyName" 
+                               placeholder="e.g., Delicious Eats Restaurant" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="businessType">Business Type</label>
+                        <select id="businessType" name="businessType" required>
+                            <option value="">Select Business Type</option>
+                            <option value="restaurant">Restaurant</option>
+                            <option value="retail">Retail Store</option>
+                            <option value="service">Service Business</option>
+                            <option value="consulting">Consulting</option>
+                            <option value="technology">Technology/Software</option>
+                            <option value="healthcare">Healthcare</option>
+                            <option value="education">Education</option>
+                            <option value="real-estate">Real Estate</option>
+                            <option value="fitness">Fitness/Gym</option>
+                            <option value="beauty">Beauty/Salon</option>
+                            <option value="automotive">Automotive</option>
+                            <option value="photography">Photography</option>
+                            <option value="law">Legal Services</option>
+                            <option value="nonprofit">Non-Profit</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="industry">Industry</label>
+                        <select id="industry" name="industry" required>
+                            <option value="">Select Industry</option>
+                            <option value="food-service">Food & Beverage</option>
+                            <option value="retail">Retail & E-commerce</option>
+                            <option value="technology">Technology</option>
+                            <option value="healthcare">Healthcare & Medical</option>
+                            <option value="finance">Finance & Banking</option>
+                            <option value="education">Education & Training</option>
+                            <option value="real-estate">Real Estate</option>
+                            <option value="automotive">Automotive</option>
+                            <option value="travel">Travel & Tourism</option>
+                            <option value="entertainment">Entertainment</option>
+                            <option value="sports">Sports & Recreation</option>
+                            <option value="fashion">Fashion & Apparel</option>
+                            <option value="home-services">Home & Garden</option>
+                            <option value="professional">Professional Services</option>
+                            <option value="manufacturing">Manufacturing</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="form-group">
+                        <label for="description">Business Description (Optional)</label>
+                        <textarea id="description" name="description" rows="4" 
+                                placeholder="Tell us more about your business to get better AI-generated content..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="template">Website Template</label>
+                        <select id="template" name="template">
+                            <option value="default">Default - Clean & Professional</option>
+                            <option value="modern">Modern - Contemporary & Stylish</option>
+                            <option value="minimal">Minimal - Simple & Elegant</option>
+                        </select>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-top: 20px;">
+                        <h4 style="color: #2c3e50; margin-bottom: 10px;">🎯 What AI Will Generate:</h4>
+                        <ul style="color: #666; margin-left: 20px;">
+                            <li>Hero section with compelling headlines</li>
+                            <li>About section describing your business</li>
+                            <li>Services/products section</li>
+                            <li>Contact section with call-to-action</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <button type="submit" class="btn btn-success" style="padding: 15px 40px; font-size: 18px;">
+                    🚀 Generate My Website
+                </button>
+            </div>
+        </form>
+        
+        <div id="generationProgress" class="hidden" style="text-align: center; margin-top: 30px;">
+            <div class="spinner"></div>
+            <h3>Creating Your Website...</h3>
+            <p>Our AI is generating professional content for your business. This may take a moment.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('createWebsiteForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = new FormData(e.target);
+        const data = {
+            company_name: formData.get('companyName'),
+            business_type: formData.get('businessType'),
+            industry: formData.get('industry'),
+            description: formData.get('description'),
+            template_id: formData.get('template')
+        };
+        
+        // Show progress
+        document.getElementById('createWebsiteForm').classList.add('hidden');
+        document.getElementById('generationProgress').classList.remove('hidden');
+        
+        try {
+            const result = await apiCall('/api/generate-website', 'POST', data);
+            
+            showAlert('Website generated successfully! 🎉', 'success');
+            
+            setTimeout(() => {
+                window.location.href = `/my-websites`;
+            }, 2000);
+            
+        } catch (error) {
+            // Hide progress and show form again
+            document.getElementById('generationProgress').classList.add('hidden');
+            document.getElementById('createWebsiteForm').classList.remove('hidden');
+            
+            showAlert(error.message, 'error');
+        }
+    });
+</script>
+{% endblock %}

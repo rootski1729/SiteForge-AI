@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - AI Website Builder{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <h1>Welcome to AI Website Builder! 🚀</h1>
+        <p style="font-size: 1.1em; color: #666; margin-bottom: 30px;">
+            Create stunning websites powered by AI in just a few clicks.
+        </p>
+        
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+            <div class="website-card" style="text-align: center;">
+                <h3>🤖 Create New Website</h3>
+                <p>Use AI to generate a professional website for your business</p>
+                <a href="/create-website" class="btn btn-primary" style="margin-top: 15px;">
+                    Start Creating
+                </a>
+            </div>
+            
+            <div class="website-card" style="text-align: center;">
+                <h3>📱 My Websites</h3>
+                <p>View and manage all your created websites</p>
+                <a href="/my-websites" class="btn btn-primary" style="margin-top: 15px;">
+                    View Websites
+                </a>
+            </div>
+            
+            <div class="website-card" style="text-align: center;" id="adminCard">
+                <h3>⚙️ Admin Panel</h3>
+                <p>Manage users, roles, and system settings</p>
+                <a href="/admin" class="btn btn-danger" style="margin-top: 15px;">
+                    Admin Panel
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h2>Recent Websites</h2>
+        <div id="recentWebsites">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Loading your websites...</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    async function loadRecentWebsites() {
+        try {
+            const result = await apiCall('/api/websites');
+            const websitesContainer = document.getElementById('recentWebsites');
+            
+            if (result.websites && result.websites.length > 0) {
+                const recentWebsites = result.websites.slice(0, 3); // Show only first 3
+                
+                websitesContainer.innerHTML = recentWebsites.map(website => `
+                    <div class="website-card">
+                        <h3>${website.title}</h3>
+                        <div class="website-meta">
+                            <p><strong>Type:</strong> ${website.business_type || 'General'}</p>
+                            <p><strong>Industry:</strong> ${website.industry || 'N/A'}</p>
+                            <p><strong>Status:</strong> ${website.is_published ? '🟢 Published' : '🟡 Draft'}</p>
+                            <p><strong>Created:</strong> ${new Date(website.created_at).toLocaleDateString()}</p>
+                        </div>
+                        <div class="website-actions">
+                            ${website.is_published ? 
+                                `<a href="/api/preview/${website._id}" target="_blank" class="btn btn-success">View Site</a>` : 
+                                '<span class="btn" style="opacity: 0.5;">Not Published</span>'
+                            }
+                            <a href="/my-websites" class="btn btn-primary">Manage</a>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                websitesContainer.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #666;">
+                        <h3>No websites yet</h3>
+                        <p>Create your first AI-powered website!</p>
+                        <a href="/create-website" class="btn btn-primary" style="margin-top: 15px;">
+                            Create First Website
+                        </a>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            document.getElementById('recentWebsites').innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #e74c3c;">
+                    <p>Error loading websites: ${error.message}</p>
+                </div>
+            `;
+        }
+    }
+    
+    // Show/hide admin card based on user role
+    document.addEventListener('DOMContentLoaded', function() {
+        const userData = localStorage.getItem('user_data');
+        if (userData) {
+            const user = JSON.parse(userData);
+            if (user.role !== 'admin') {
+                document.getElementById('adminCard').style.display = 'none';
+            }
+        }
+        
+        loadRecentWebsites();
+    });
+</script>
+{% endblock %}
