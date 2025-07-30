@@ -5,7 +5,6 @@ A powerful web application that uses AI to generate professional websites automa
 ![AI Website Builder](https://img.shields.io/badge/Python-3.8+-blue.svg)
 ![Flask](https://img.shields.io/badge/Flask-2.3.3-green.svg)
 ![MongoDB](https://img.shields.io/badge/MongoDB-Latest-green.svg)
-![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 ## Features
 
